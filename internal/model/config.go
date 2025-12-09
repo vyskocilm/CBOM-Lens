@@ -492,12 +492,11 @@ func DefaultConfig(ctx context.Context) Config {
 		cfg.Containers.Config = containers
 	}
 
-	cfg.CBOM.Extensions = append(cfg.CBOM.Extensions, "czertainly")
-
 	if err = defaults.Set(&cfg); err != nil {
 		slog.ErrorContext(ctx, "can't set default values in config: continuing with empty values", "error", err)
 	}
 
+	cfg.CBOM.Extensions = append(cfg.CBOM.Extensions, "czertainly")
 	return cfg
 }
 

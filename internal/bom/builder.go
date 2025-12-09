@@ -43,12 +43,12 @@ func NewBuilder(config model.CBOM) (*Builder, error) {
 		cdx.SpecVersion1_6: "https://cyclonedx.org/schema/bom-1.6.schema.json",
 	}
 
-	version, ook := versions[config.Version]
-	if !ook {
+	version, ok := versions[config.Version]
+	if !ok {
 		return nil, fmt.Errorf("unsupported cbom spec version %s", config.Version)
 	}
-	schema, ook := schemas[version]
-	if !ook {
+	schema, ok := schemas[version]
+	if !ok {
 		return nil, fmt.Errorf("unknown json schema for version %s", version)
 	}
 
