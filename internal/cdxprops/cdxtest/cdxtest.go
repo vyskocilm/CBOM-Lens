@@ -13,6 +13,11 @@ import (
 var data embed.FS
 
 const (
+	// DSA 2048
+	DSA2048PrivateKey = "testdata/dsa-2048-private-key.pem"
+	DSA2048PublicKey  = "testdata/dsa-2048-public-key.pem"
+
+	// ML-DSA 65
 	MLDSA65PrivateKey  = "testdata/ml-dsa-65-private-key.pem"
 	MLDSA65PublicKey   = "testdata/ml-dsa-65-public-key.pem"
 	MLDSA64Certificate = "testdata/ml-dsa-65-cert.pem"
