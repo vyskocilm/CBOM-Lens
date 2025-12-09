@@ -8,6 +8,7 @@ import (
 	"log/slog"
 	"net/netip"
 	"os"
+	"strings"
 
 	"github.com/CZERTAINLY/CBOM-lens/internal/bom"
 	"github.com/CZERTAINLY/CBOM-lens/internal/cdxprops"
@@ -24,6 +25,7 @@ import (
 
 // Lens is a component, which encapsulates the scan functionality and executes it.
 type Lens struct {
+	config      model.Scan
 	detectors   []service.Detector
 	filesystems iter.Seq2[walk.Entry, error]
 	containers  iter.Seq2[walk.Entry, error]
@@ -59,6 +61,12 @@ func NewLens(ctx context.Context, config model.Scan) (Lens, error) {
 
 	// scan result to cyclonedx-go converter
 	converter := cdxprops.NewConverter()
+	// enable CZERTAINLY extensions
+	for _, ext := range config.CBOM.Extensions {
+		if strings.EqualFold(ext, "czertainly") {
+			converter = converter.WithCzertainlyExtensions(true)
+		}
+	}
 
 	detectors := []service.Detector{
 		x509Detector{
@@ -82,6 +90,7 @@ func NewLens(ctx context.Context, config model.Scan) (Lens, error) {
 	}
 
 	return Lens{
+		config:      config,
 		detectors:   detectors,
 		filesystems: filesystems,
 		containers:  containers,
@@ -94,7 +103,10 @@ func NewLens(ctx context.Context, config model.Scan) (Lens, error) {
 func (s Lens) Do(ctx context.Context, out io.Writer) error {
 	g, ctx := errgroup.WithContext(ctx)
 
-	b := bom.NewBuilder()
+	b, err := bom.NewBuilder(s.config.CBOM)
+	if err != nil {
+		return fmt.Errorf("creating CBOM builder: %w", err)
+	}
 	detections := make(chan model.Detection)
 	processed := make(chan struct{})
 	go func() {
@@ -137,7 +149,7 @@ func (s Lens) Do(ctx context.Context, out io.Writer) error {
 	close(detections)
 
 	<-processed
-	err := b.AsJSON(out)
+	err = b.AsJSON(out)
 	if err != nil {
 		return fmt.Errorf("formatting BOM as JSON: %w", err)
 	}

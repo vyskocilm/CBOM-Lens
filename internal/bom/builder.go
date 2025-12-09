@@ -2,6 +2,7 @@ package bom
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"log/slog"
 	"maps"
@@ -14,30 +15,50 @@ import (
 	"github.com/google/uuid"
 )
 
-var version string
+var programVersion string
 
 func init() {
 	info, ok := debug.ReadBuildInfo()
 	if !ok {
-		version = "unknown"
+		programVersion = "unknown"
 	} else {
-		version = info.Main.Version
+		programVersion = info.Main.Version
 	}
 }
 
 // Builder is a builder pattern for a CycloneDX BOM structure
 type Builder struct {
+	version      cdx.SpecVersion
+	schema       string
 	components   map[string]*cdx.Component
 	dependencies map[string]*[]string
 	properties   []cdx.Property
 }
 
-func NewBuilder() *Builder {
+func NewBuilder(config model.CBOM) (*Builder, error) {
+	var versions = map[string]cdx.SpecVersion{
+		"1.6": cdx.SpecVersion1_6,
+	}
+	var schemas = map[cdx.SpecVersion]string{
+		cdx.SpecVersion1_6: "https://cyclonedx.org/schema/bom-1.6.schema.json",
+	}
+
+	version, ook := versions[config.Version]
+	if !ook {
+		return nil, fmt.Errorf("unsupported cbom spec version %s", config.Version)
+	}
+	schema, ook := schemas[version]
+	if !ook {
+		return nil, fmt.Errorf("unknown json schema for version %s", version)
+	}
+
 	return &Builder{
+		version:      version,
+		schema:       schema,
 		components:   make(map[string]*cdx.Component),
 		dependencies: make(map[string]*[]string),
 		properties:   []cdx.Property{},
-	}
+	}, nil
 }
 
 func (b *Builder) AppendDetections(ctx context.Context, detections ...model.Detection) *Builder {
@@ -113,7 +134,7 @@ func (b *Builder) BOM() cdx.BOM {
 			Component: &cdx.Component{
 				Type:    "application",
 				Name:    "CBOM-Lens",
-				Version: version,
+				Version: programVersion,
 				Manufacturer: &cdx.OrganizationalEntity{
 					Name:    "CZERTAINLY",
 					Address: &cdx.PostalAddress{},

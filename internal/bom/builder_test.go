@@ -13,9 +13,17 @@ import (
 )
 
 func TestNewBuilder(t *testing.T) {
-	b := bom.NewBuilder()
+	b, err := bom.NewBuilder(model.CBOM{Version: "1.6"})
 
+	require.NoError(t, err)
 	require.NotNil(t, b)
+}
+
+func TestNewBuilder_Fail(t *testing.T) {
+	b, err := bom.NewBuilder(model.CBOM{Version: "45.2"})
+
+	require.Error(t, err)
+	require.Nil(t, b)
 }
 
 func TestBuilder_AppendDetections(t *testing.T) {
@@ -185,7 +193,8 @@ func TestBuilder_AppendDetections(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			b := bom.NewBuilder()
+			b, err := bom.NewBuilder(model.CBOM{Version: "1.6"})
+			require.NoError(t, err)
 			b.AppendDetections(ctx, tt.detections...)
 			result := b.BOM()
 
@@ -196,7 +205,8 @@ func TestBuilder_AppendDetections(t *testing.T) {
 
 func TestBuilder_BOM(t *testing.T) {
 	ctx := context.Background()
-	b := bom.NewBuilder()
+	b, err := bom.NewBuilder(model.CBOM{Version: "1.6"})
+	require.NoError(t, err)
 
 	detection := model.Detection{
 		Source:   "PEM",
@@ -246,7 +256,8 @@ func TestBuilder_BOM(t *testing.T) {
 
 func TestBuilder_AsJSON(t *testing.T) {
 	ctx := context.Background()
-	b := bom.NewBuilder()
+	b, err := bom.NewBuilder(model.CBOM{Version: "1.6"})
+	require.NoError(t, err)
 
 	detection := model.Detection{
 		Source:   "PEM",
@@ -270,8 +281,7 @@ func TestBuilder_AsJSON(t *testing.T) {
 	b.AppendDetections(ctx, detection)
 
 	var buf bytes.Buffer
-	err := b.AsJSON(&buf)
-
+	err = b.AsJSON(&buf)
 	require.NoError(t, err)
 	require.NotEmpty(t, buf.String())
 
