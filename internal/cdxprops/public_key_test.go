@@ -8,6 +8,7 @@ import (
 
 	"github.com/CZERTAINLY/CBOM-lens/internal/cdxprops/cdxtest"
 	"github.com/CZERTAINLY/CBOM-lens/internal/xcrypto"
+
 	"github.com/stretchr/testify/require"
 )
 

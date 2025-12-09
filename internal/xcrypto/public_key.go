@@ -111,7 +111,7 @@ func marshalPKIXPublicKey(pubKey crypto.PublicKey) ([]byte, error) {
 		oid = MLDSA65
 		b = k.Bytes()
 	case *mldsa87.PublicKey:
-		oid = MLDSA65
+		oid = MLDSA87
 		b = k.Bytes()
 	default:
 		return nil, fmt.Errorf("unsupported public key: %T", pubKey)
