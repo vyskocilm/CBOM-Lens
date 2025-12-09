@@ -17,13 +17,21 @@ const (
 	DSA2048PrivateKey = "testdata/dsa-2048-private-key.pem"
 	DSA2048PublicKey  = "testdata/dsa-2048-public-key.pem"
 
+	// ML-DSA 44
+	MLDSA44PrivateKey    = "testdata/ml-dsa-44-private-key.pem"
+	MLDSA44PublicKey     = "testdata/ml-dsa-44-public-key.pem"
+	MLDSA44PublicKeyHash = "e9996728b4c68cfd933599d9c0b532fa460a0a78de97545575647870ec217317"
+
 	// ML-DSA 65
-	MLDSA65PrivateKey  = "testdata/ml-dsa-65-private-key.pem"
-	MLDSA65PublicKey   = "testdata/ml-dsa-65-public-key.pem"
-	MLDSA64Certificate = "testdata/ml-dsa-65-cert.pem"
+	MLDSA65PrivateKey = "testdata/ml-dsa-65-private-key.pem"
+	MLDSA65PublicKey  = "testdata/ml-dsa-65-public-key.pem"
 	// To verify the hash of a public key use
 	// openssl pkey -pubin -in internal/cdxprops/cdxtest/testdata/ml-dsa-65-public-key.pem -outform DER | openssl dgst -sha256
 	MLDSA65PublicKeyHash = "bbf687535068e46b92b1a13fddb94cf59149624484986b8435bda6e1ee1536a3"
+
+	MLDSA87PrivateKey    = "testdata/ml-dsa-87-private-key.pem"
+	MLDSA87PublicKey     = "testdata/ml-dsa-87-public-key.pem"
+	MLDSA87PublicKeyHash = "1e6ed2f12fb7fa1f7e43c2e3843e2fa28eccdac25e1b344d43aee45c4051638f"
 )
 
 func TestData(path string) ([]byte, error) {

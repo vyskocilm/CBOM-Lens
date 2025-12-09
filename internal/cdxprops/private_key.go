@@ -79,14 +79,14 @@ func getPublicKey(privKey crypto.PrivateKey) (crypto.PublicKey, error) {
 	switch k := privKey.(type) {
 	case model.PrivateKeyInfo:
 		return getPublicKey(k.Key)
+	case *dsa.PrivateKey:
+		return &k.PublicKey, nil
 	case *rsa.PrivateKey:
 		return &k.PublicKey, nil
 	case *ecdsa.PrivateKey:
 		return &k.PublicKey, nil
 	case ed25519.PrivateKey:
 		return k.Public(), nil
-	case *dsa.PrivateKey:
-		return &k.PublicKey, nil
 	case *mldsa44.PrivateKey:
 		return k.Public(), nil
 	case *mldsa65.PrivateKey:

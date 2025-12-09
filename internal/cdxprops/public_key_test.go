@@ -53,16 +53,38 @@ func TestPublicKeyAlgorithmInfo(t *testing.T) {
 		{
 			scenario: "DSA-2048 Public Key",
 			given: func(t *testing.T) crypto.PublicKey {
-				return parseDer(t, cdxtest.DSA2048PublicKey)
+				return parsePublicKey(t, cdxtest.DSA2048PublicKey)
 			},
 			then: "DSA-2048",
 		},
 		{
+			scenario: "ML-DSA-44 Public Key",
+			given: func(t *testing.T) crypto.PublicKey {
+				return parsePublicKey(t, cdxtest.MLDSA44PublicKey)
+			},
+			then: "ML-DSA-44",
+		},
+		{
 			scenario: "ML-DSA-65 Public Key",
 			given: func(t *testing.T) crypto.PublicKey {
-				return parseDer(t, cdxtest.MLDSA65PublicKey)
+				return parsePublicKey(t, cdxtest.MLDSA65PublicKey)
 			},
 			then: "ML-DSA-65",
+		},
+		{
+			scenario: "ML-DSA-87 Public Key",
+			given: func(t *testing.T) crypto.PublicKey {
+				return parsePublicKey(t, cdxtest.MLDSA87PublicKey)
+			},
+			then: "ML-DSA-87",
+		},
+		{
+			scenario: "unknown",
+			given: func(_ *testing.T) crypto.PublicKey {
+				type unknown struct{}
+				return unknown{}
+			},
+			then: "Unknown",
 		},
 	}
 
@@ -79,7 +101,7 @@ func TestPublicKeyAlgorithmInfo(t *testing.T) {
 	}
 }
 
-func parseDer(t *testing.T, name string) crypto.PublicKey {
+func parsePublicKey(t *testing.T, name string) crypto.PublicKey {
 	t.Helper()
 	data, err := cdxtest.TestData(name)
 	require.NoError(t, err)
