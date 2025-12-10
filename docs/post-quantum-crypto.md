@@ -10,7 +10,7 @@ At the time of writing, the only post-quantum algorithm supported by the Go stan
 
 To address this limitation, the project integrates the [github.com/cloudflare/circl](https://github.com/cloudflare/circl) library. CIRCL provides implementations of several post-quantum algorithms, enabling Go applications to use PQC for cryptographic operations such as key management and digital signatures.
 
-#### 3. Supported ML-DSA Key Types
+## 3. Supported ML-DSA Key Types
 
 Currently, the following ML-DSA parameter sets are supported for both public and private keys:
 - **ML-DSA-44**
