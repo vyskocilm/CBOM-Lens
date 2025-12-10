@@ -36,7 +36,7 @@ type publicKeyInfo struct {
 // details from both attempts.
 //
 // Parameters:
-// - b: The PKIX-encoded private key as a byte slice.
+// - b: The PKIX-encoded public key as a byte slice.
 //
 // Returns:
 // - crypto.PublicKey: The parsed private key if successful.

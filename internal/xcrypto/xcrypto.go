@@ -1,4 +1,4 @@
-// xcrypro extends support of stdlib crypto
+// xcrypto extends support of stdlib crypto
 // mainly Post Quantum crypto support via github.com/cloudflare/circl
 package xcrypto
 

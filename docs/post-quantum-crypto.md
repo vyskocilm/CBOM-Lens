@@ -19,7 +19,7 @@ Currently, the following ML-DSA parameter sets are supported for both public and
 
 These correspond to the CRYSTALS-Dilithium signature scheme at different security levels.
 
-#### 4. Work in Progress
+## 4. Work in Progress
 
 Support for post-quantum cryptography in this project is **work in progress**. Additional algorithms, features, and integration improvements are planned. Users should expect ongoing updates and are encouraged to provide feedback or contribute.
 
