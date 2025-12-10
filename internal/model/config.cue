@@ -7,10 +7,11 @@ package config
 // CBOM-Lens top-level configuration object.
 #Config: {
 version: 0
+service: #Service
 filesystem?: #Filesystem
 containers?: #Containers
 ports?: #Ports
-service: #Service
+cbom?: #CBOM
 }
 
 // ScanConfig is a subset of a top level configuration which will be passed in a discovery mode by core.
@@ -20,6 +21,13 @@ filesystem?: #Filesystem
 containers?: #Containers
 ports?: #Ports
 service?: #ServiceFields
+cbom?: #CBOM
+}
+
+// CBOM defines cbom properties
+#CBOM: {
+  version?: string | *"1.6"
+  extensions?: [...string]
 }
 
 // Set of filesystem scanning settings; when disabled no filesystem paths are processed.

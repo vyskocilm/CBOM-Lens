@@ -58,6 +58,10 @@ service:
 					"enabled": false,
 					"ipv4": false,
 					"ipv6": false
+				},
+				"cbom": {
+					"version": "1.6",
+					"extensions": null
 				}
 			}`,
 		},
@@ -104,6 +108,10 @@ service:
 					"enabled": false,
 					"ipv4": false,
 					"ipv6": false
+				},
+				"cbom": {
+					"version": "1.6",
+					"extensions": null
 				}
 			}`,
 		},
@@ -151,6 +159,10 @@ service:
 					"enabled": false,
 					"ipv4": false,
 					"ipv6": false
+				},
+				"cbom": {
+					"version": "1.6",
+					"extensions": null
 				}
 			}`,
 		},
@@ -169,6 +181,7 @@ containers:
       host: /var/run/docker.sock
 `,
 			expectedJSON: `{
+"version": 0,
 "containers": {
     "Config": [
       {
@@ -191,7 +204,46 @@ containers:
     "log": "stderr",
     "mode": "manual"
   },
-  "version": 0}`,
+  "cbom": {
+    "version": "1.6",
+    "extensions": null
+  }
+}`,
+		},
+		{
+			scenario: "defaults",
+			yml: `
+version: 0
+service:
+  mode: manual
+  log: stderr
+cbom:
+  extensions:
+    - czertainly
+`,
+			expectedJSON: `{
+"containers": {
+    "Config": null,
+    "enabled": false
+  },
+  "filesystem": {
+    "enabled": false
+  },
+  "ports": {
+    "enabled": false,
+    "ipv4": false,
+    "ipv6": false
+  },
+  "service": {
+    "log": "stderr",
+    "mode": "manual"
+  },
+  "version": 0,
+  "cbom": {
+    "version": "1.6",
+    "extensions": ["czertainly"]
+  }
+}`,
 		},
 	}
 

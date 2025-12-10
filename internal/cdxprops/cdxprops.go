@@ -26,7 +26,7 @@ type Converter struct {
 
 func NewConverter() Converter {
 	return Converter{
-		czertainly: true,
+		czertainly: false,
 		bomRefHasher: func(b []byte) string {
 			hash := sha256.Sum256(b)
 			return "sha256:" + hex.EncodeToString(hash[:])

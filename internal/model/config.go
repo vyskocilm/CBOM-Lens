@@ -20,6 +20,7 @@ import (
 	"cuelang.org/go/cue"
 	"cuelang.org/go/cue/cuecontext"
 	"cuelang.org/go/encoding/yaml"
+	"github.com/creasty/defaults"
 	"github.com/docker/docker/client"
 
 	_ "embed"
@@ -49,6 +50,7 @@ type Scan struct {
 	Containers Containers    `json:"containers"`
 	Ports      Ports         `json:"ports"`
 	Service    ServiceFields `json:"service"`
+	CBOM       CBOM          `json:"cbom"`
 }
 
 // Config is a supervisor + scan related config
@@ -58,6 +60,7 @@ type Config struct {
 	Containers Containers `json:"containers"`
 	Ports      Ports      `json:"ports"`
 	Service    Service    `json:"service"`
+	CBOM       CBOM       `json:"cbom"`
 }
 
 // Filesystem scanning settings.
@@ -130,6 +133,11 @@ type Core struct {
 	BaseURL URL `json:"base_url"`
 }
 
+type CBOM struct {
+	Version    string   `json:"version" default:"1.6"`
+	Extensions []string `json:"extensions"`
+}
+
 func (c Config) IsZero() bool {
 	return c.Filesystem.IsZero() &&
 		c.Containers.Config.IsZero() &&
@@ -170,7 +178,7 @@ func (s *Scan) Merge(newCfg Scan) {
 	}
 }
 
-func expandEnvRecursive[PT configPT](pt PT) {
+func expandEnv[PT configPT](pt PT) {
 	var v any = pt
 	rv := reflect.ValueOf(v)
 	if rv.Kind() != reflect.Pointer {
@@ -178,10 +186,10 @@ func expandEnvRecursive[PT configPT](pt PT) {
 		return
 	}
 	rv = rv.Elem()
-	expandEnvValue(rv)
+	postProcessRecursive(rv)
 }
 
-func expandEnvValue(v reflect.Value) {
+func postProcessRecursive(v reflect.Value) {
 	if !v.IsValid() {
 		return
 	}
@@ -189,23 +197,24 @@ func expandEnvValue(v reflect.Value) {
 	case reflect.String:
 		if v.CanSet() {
 			v.SetString(os.ExpandEnv(v.String()))
+
 		}
 	case reflect.Struct:
 		for i := 0; i < v.NumField(); i++ {
 			f := v.Field(i)
 			// only exported (CanSet)
 			if f.CanSet() {
-				expandEnvValue(f)
+				postProcessRecursive(f)
 			} else {
 				// still allow recursive into addressable nested structs
 				if f.Kind() == reflect.Struct {
-					expandEnvValue(f)
+					postProcessRecursive(f)
 				}
 			}
 		}
 	case reflect.Pointer:
 		if !v.IsNil() {
-			expandEnvValue(v.Elem())
+			postProcessRecursive(v.Elem())
 		}
 	case reflect.Slice:
 		et := v.Type().Elem()
@@ -233,7 +242,7 @@ func expandEnvValue(v reflect.Value) {
 			}
 		case reflect.Struct, reflect.Pointer:
 			for i := 0; i < v.Len(); i++ {
-				expandEnvValue(v.Index(i))
+				postProcessRecursive(v.Index(i))
 			}
 		default:
 			// other slice types ignored
@@ -392,8 +401,8 @@ func loadConfig1[PT configPT](r io.Reader, pt PT, schema cue.Value) error {
 		return err
 	}
 
-	expandEnvRecursive(pt)
-	return nil
+	expandEnv(pt)
+	return defaults.Set(pt)
 }
 
 // CueError provides more user friendly validation errors on top of
@@ -483,6 +492,11 @@ func DefaultConfig(ctx context.Context) Config {
 		cfg.Containers.Config = containers
 	}
 
+	if err = defaults.Set(&cfg); err != nil {
+		slog.ErrorContext(ctx, "can't set default values in config: continuing with empty values", "error", err)
+	}
+
+	cfg.CBOM.Extensions = append(cfg.CBOM.Extensions, "czertainly")
 	return cfg
 }
 

@@ -132,7 +132,7 @@ func TestServer_listAttributeDefinitions(t *testing.T) {
 	require.Equal(t, lensConfigurationAttrName, result[0].Name)
 	require.Equal(t, 1, len(result[0].Content))
 	require.Equal(t, "yaml", result[0].Content[0].Data.Language)
-	require.Equal(t, "dmVyc2lvbjogMApmaWxlc3lzdGVtOgogICAgZW5hYmxlZDogdHJ1ZQogICAgcGF0aHM6CiAgICAgICAgLSAvdGVzdApjb250YWluZXJzOgogICAgZW5hYmxlZDogZmFsc2UKICAgIGNvbmZpZzogW10KcG9ydHM6CiAgICBlbmFibGVkOiBmYWxzZQogICAgYmluYXJ5OiAiIgogICAgcG9ydHM6ICIiCiAgICBpcHY0OiBmYWxzZQogICAgaXB2NjogZmFsc2UKc2VydmljZToKICAgIHZlcmJvc2U6IGZhbHNlCiAgICBsb2c6ICIiCg==", result[0].Content[0].Data.Code)
+	require.Equal(t, "dmVyc2lvbjogMApmaWxlc3lzdGVtOgogICAgZW5hYmxlZDogdHJ1ZQogICAgcGF0aHM6CiAgICAgICAgLSAvdGVzdApjb250YWluZXJzOgogICAgZW5hYmxlZDogZmFsc2UKICAgIGNvbmZpZzogW10KcG9ydHM6CiAgICBlbmFibGVkOiBmYWxzZQogICAgYmluYXJ5OiAiIgogICAgcG9ydHM6ICIiCiAgICBpcHY0OiBmYWxzZQogICAgaXB2NjogZmFsc2UKc2VydmljZToKICAgIHZlcmJvc2U6IGZhbHNlCiAgICBsb2c6ICIiCmNib206CiAgICB2ZXJzaW9uOiAiIgogICAgZXh0ZW5zaW9uczogW10K", result[0].Content[0].Data.Code)
 }
 
 func TestServer_listAttributeDefinitions_ConfigError(t *testing.T) {

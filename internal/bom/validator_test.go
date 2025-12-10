@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/CZERTAINLY/CBOM-lens/internal/bom"
+	"github.com/CZERTAINLY/CBOM-lens/internal/model"
 
 	cdx "github.com/CycloneDX/cyclonedx-go"
 	"github.com/stretchr/testify/require"
@@ -33,7 +34,8 @@ func TestValidator_Validate_Errors(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.scenario, func(t *testing.T) {
 			// when bom
-			b := bom.NewBuilder()
+			b, err := bom.NewBuilder(model.CBOM{Version: "1.6"})
+			require.NoError(t, err)
 			bom := b.BOM()
 			tt.given(&bom)
 
@@ -65,18 +67,23 @@ func TestValidator_Validate(t *testing.T) {
 
 	tests := []struct {
 		scenario string
-		given    bom.Builder
+		given    func(*testing.T) *bom.Builder
 	}{
 		{
 			scenario: "empty builder",
-			given:    *bom.NewBuilder(),
+			given: func(t *testing.T) *bom.Builder {
+				t.Helper()
+				b, err := bom.NewBuilder(model.CBOM{Version: "1.6"})
+				require.NoError(t, err)
+				return b
+			},
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.scenario, func(t *testing.T) {
 			// when
-			bom := tt.given.BOM()
+			bom := tt.given(t).BOM()
 			var buf bytes.Buffer
 			enc := cdx.NewBOMEncoder(&buf, cdx.BOMFileFormatJSON)
 			require.NoError(t, enc.Encode(&bom))
@@ -101,7 +108,8 @@ func TestValidator_UnsupportedVersion(t *testing.T) {
 
 	validator, err := bom.NewValidator(cdx.SpecVersion1_6)
 	require.NoError(t, err)
-	b := bom.NewBuilder()
+	b, err := bom.NewBuilder(model.CBOM{Version: "1.6"})
+	require.NoError(t, err)
 	bom := b.BOM()
 
 	bom.SpecVersion = cdx.SpecVersion1_5
