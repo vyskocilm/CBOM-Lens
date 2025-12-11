@@ -1,11 +1,7 @@
 package cdxprops
 
 import (
-	"context"
-	"crypto/dsa" //nolint:staticcheck // cbom-lens is going to recognize even obsoleted crypto
-	"crypto/ecdsa"
-	"crypto/ed25519"
-	"crypto/rsa"
+	"context" //nolint:staticcheck // cbom-lens is going to recognize even obsoleted crypto
 	"crypto/sha1"
 	"crypto/sha256"
 	"crypto/x509"
@@ -61,24 +57,12 @@ func sigAlgOID(cert *x509.Certificate) string {
 	return outer.SigAlg.Algorithm.String()
 }
 
-func spkiOID(cert *x509.Certificate) (string, bool) {
+func spkiOID(cert *x509.Certificate) string {
 	var info pkixStruct
 	if _, err := asn1.Unmarshal(cert.RawSubjectPublicKeyInfo, &info); err != nil {
-		return "", false
+		return ""
 	}
-	return info.Algorithm.Algorithm.String(), true
-}
-
-func parsePKIX(der []byte) (pkixStruct, error) {
-	var info pkixStruct
-	_, err := asn1.Unmarshal(der, &info)
-	return info, err
-}
-
-func parsePKCS8(der []byte) (pkcs8Struct, error) {
-	var info pkcs8Struct
-	_, err := asn1.Unmarshal(der, &info)
-	return info, err
+	return info.Algorithm.Algorithm.String()
 }
 
 func readSignatureAlgorithmRef(ctx context.Context, cert *x509.Certificate, oidFallback string) cdx.BOMReference {
@@ -112,7 +96,7 @@ func (c Converter) certHitToComponents(ctx context.Context, hit model.CertHit) (
 		ctx,
 		hit.Cert.PublicKeyAlgorithm,
 		hit.Cert.PublicKey,
-		hit.Cert.KeyUsage,
+		hit.Cert,
 	)
 	certificateRelatedProperties(&mainCertCompo, hit.Cert)
 	mainCertCompo.CryptoProperties.CertificateProperties.SignatureAlgorithmRef = cdx.BOMReference(signatureAlgCompo.BOMRef)
@@ -269,40 +253,4 @@ func sha256Hash(data []byte) []byte {
 func sha1Hash(data []byte) []byte {
 	hash := sha1.Sum(data) // NOSONAR - we provide sha1 and sha256 hashes
 	return hash[:]
-}
-
-func ReadSubjectPublicKeyRef(ctx context.Context, cert *x509.Certificate) cdx.BOMReference {
-	// First try concrete key types the stdlib understands.
-	switch pub := cert.PublicKey.(type) {
-	case *rsa.PublicKey:
-		return cdx.BOMReference(fmt.Sprintf("crypto/key/rsa-%d@1.2.840.113549.1.1.1", pub.N.BitLen()))
-	case *ecdsa.PublicKey:
-		switch pub.Params().BitSize {
-		case 256:
-			return "crypto/key/ecdsa-p256@1.2.840.10045.3.1.7"
-		case 384:
-			return "crypto/key/ecdsa-p384@1.3.132.0.34"
-		case 521:
-			return "crypto/key/ecdsa-p521@1.3.132.0.35"
-		default:
-			return "crypto/key/ecdsa-unknown@1.2.840.10045.2.1"
-		}
-	case ed25519.PublicKey:
-		return "crypto/key/ed25519-256@1.3.101.112"
-	case *dsa.PublicKey:
-		return cdx.BOMReference(fmt.Sprintf("crypto/key/dsa-%d@1.2.840.10040.4.1", pub.P.BitLen()))
-	}
-
-	// Otherwise parse SPKI.algorithm OID (PQC & other non-stdlib types).
-	oid, ok := spkiOID(cert)
-	if !ok {
-		slog.DebugContext(ctx, "Failed to parse SPKI OID")
-		return refUnknownKey
-	}
-	if ref, ok := spkiOIDRef[oid]; ok {
-		return ref
-	}
-
-	slog.DebugContext(ctx, "Unknown public key algorithm OID", "oid", oid)
-	return refUnknownKey
 }

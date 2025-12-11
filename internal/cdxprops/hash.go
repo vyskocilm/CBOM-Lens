@@ -16,18 +16,32 @@ type hashAlgorithmInfo struct {
 	OID                    string // Object Identifier
 }
 
-var md2Info = hashAlgorithmInfo{
-	Name:                   "MD2",
-	ParameterSetIdentifier: 128,
-	ClassicalSecurityLevel: 0,
-	OID:                    "1.2.840.113549.2.2",
-}
-
 var unsupportedInfo = hashAlgorithmInfo{
-	Name:                   "",
+	Name:                   "Unsupported",
 	ParameterSetIdentifier: 0,
 	ClassicalSecurityLevel: 0,
-	OID:                    "N/A",
+	OID:                    "0.0.0.0",
+}
+
+var hashInfoMap2 = map[string]hashAlgorithmInfo{
+	"MD2": {
+		Name:                   "MD2",
+		ParameterSetIdentifier: 128,
+		ClassicalSecurityLevel: 0,
+		OID:                    "1.2.840.113549.2.2",
+	},
+	"SHAKE128": {
+		Name:                   "SHAKE128",
+		ParameterSetIdentifier: 128,
+		ClassicalSecurityLevel: 128,
+		OID:                    "2.16.840.1.101.3.6.5.3",
+	},
+	"SHAKE256": {
+		Name:                   "SHAKE256",
+		ParameterSetIdentifier: 256,
+		ClassicalSecurityLevel: 256,
+		OID:                    "2.16.840.1.101.3.6.5.4",
+	},
 }
 
 var hashInfoMap = map[crypto.Hash]hashAlgorithmInfo{
@@ -189,10 +203,7 @@ func (c Converter) hashAlgorithmCompo(name string) cdx.Component {
 		name = "SHA1"
 	}
 	var info hashAlgorithmInfo
-	if name == "MD2" {
-		info = md2Info
-	} else {
-		h, ok := stringToHash[name]
+	if h, ok := stringToHash[name]; ok {
 		if !ok {
 			info = unsupportedInfo
 			info.Name = name
@@ -202,6 +213,14 @@ func (c Converter) hashAlgorithmCompo(name string) cdx.Component {
 				info = unsupportedInfo
 				info.Name = name
 			}
+		}
+	} else {
+		i, ok := hashInfoMap2[name]
+		if !ok {
+			info = unsupportedInfo
+			info.Name = name
+		} else {
+			info = i
 		}
 	}
 
