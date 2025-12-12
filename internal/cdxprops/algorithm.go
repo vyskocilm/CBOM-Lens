@@ -316,7 +316,7 @@ var unsupportedAlgorithms = map[string]algorithmInfo{
 		},
 	},
 	"1.3.6.1.5.5.7.6.35": {
-		name:          "XMSS^MT",
+		name:          "XMSS-MT",
 		oid:           "1.3.6.1.5.5.7.6.35",
 		paramSetID:    "xmss-mt",
 		keySize:       0,
