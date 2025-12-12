@@ -140,7 +140,7 @@ func (c Converter) unsupportedPKIX(der []byte) (key, algo cdx.Component, err err
 	}
 	info, ok := unsupportedAlgorithms[pubKey.Algorithm.Algorithm.String()]
 	if !ok {
-		err = fmt.Errorf("unsusported fallback oid %q", pubKey.Algorithm.Algorithm.String())
+		err = fmt.Errorf("unsupported fallback oid %q", pubKey.Algorithm.Algorithm.String())
 		return
 	}
 
