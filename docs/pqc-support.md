@@ -2,7 +2,7 @@
 
 `CBOM-Lens` is written in Go, which does not support PQC algorithm yet. The tool fallbacks to parsing the ASN.1 structure in cases it can't use stdlib to do so.
 
-This works for PEM format and x500.Certificates.
+This works for PEM format and x509.Certificates.
 
 - **2.16.840.1.101.3.4.3.17**: `crypto/algorithm/ml-dsa-44`
 - **2.16.840.1.101.3.4.3.18**: `crypto/algorithm/ml-dsa-65`
