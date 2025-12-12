@@ -19,7 +19,7 @@ This works for PEM format and x509.Certificates.
 - **2.16.840.1.101.3.4.3.29**: `crypto/algorithm/slh-dsa-shake-192f`
 - **2.16.840.1.101.3.4.3.30**: `crypto/algorithm/slh-dsa-shake-256s`
 - **2.16.840.1.101.3.4.3.31**: `crypto/algorithm/slh-dsa-shake-256f`
-- **1.3.6.1.5.5.7.6.34**: `crypto/algorithm/xmss`
+- **1.3.6.1.5.5.7.6.34**: `crypto/algorithm/xmss-hashsig`
 - **1.3.6.1.5.5.7.6.35**: `crypto/algorithm/xmss-mt`
 - **1.2.840.113549.1.9.16.3.17**: `crypto/algorithm/hss-lms`
 - **1.3.9999.6.1.1**: `crypto/algorithm/hqc-128`
