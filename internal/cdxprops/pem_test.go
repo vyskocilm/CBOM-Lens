@@ -96,10 +96,24 @@ func TestConverter_PEM(t *testing.T) {
 				Bytes:   mldsa65PublicKeyPEM.Bytes,
 				Order:   1,
 			},
+			{
+				Type:    mldsa65PrivateKeyPEM.Type,
+				Headers: map[string]string{},
+				Bytes:   []byte("garbage"),
+				Order:   2,
+			},
+			{
+				Type:    mldsa65PublicKeyPEM.Type,
+				Headers: map[string]string{},
+				Bytes:   []byte("garbage"),
+				Order:   3,
+			},
 		},
 		ParseErrors: map[int]error{
 			0: errors.New("ml-dsa-65"),
 			1: errors.New("ml-dsa-65"),
+			2: errors.New("garbage"),
+			3: errors.New("garbage"),
 		},
 	}
 

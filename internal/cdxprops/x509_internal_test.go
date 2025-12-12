@@ -1,6 +1,7 @@
 package cdxprops
 
 import (
+	"encoding/pem"
 	"testing"
 
 	"github.com/CZERTAINLY/CBOM-lens/internal/cdxprops/cdxtest"
@@ -76,4 +77,17 @@ func TestConverter_certConverter(t *testing.T) {
 	})
 
 	require.NotZero(t, compo)
+}
+
+func Test_hashRawPublicKey(t *testing.T) {
+	t.Parallel()
+	data, err := cdxtest.TestData(cdxtest.MLDSA65PublicKey)
+	require.NoError(t, err)
+	block, _ := pem.Decode(data)
+	require.Equal(t, "PUBLIC KEY", block.Type)
+
+	c := NewConverter()
+	value, hash := c.hashRawPublicKey(block.Bytes)
+	require.NotEmpty(t, value)
+	require.Equal(t, cdxtest.MLDSA65PublicKeyHash, hash)
 }

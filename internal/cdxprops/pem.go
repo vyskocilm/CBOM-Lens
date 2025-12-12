@@ -181,13 +181,7 @@ func (c Converter) unsupportedPKIX(der []byte) (key, algo cdx.Component, err err
 }
 
 func (c Converter) hashRawPublicKey(der []byte) (value, hash string) {
-	// Marshal to PKIX/SPKI format (standard DER encoding)
-	pubKeyBytes, err := x509.MarshalPKIXPublicKey(der)
-	if err != nil {
-		return
-	}
-
-	value = base64.StdEncoding.EncodeToString(pubKeyBytes)
-	hash = c.bomRefHasher(pubKeyBytes)
+	value = base64.StdEncoding.EncodeToString(der)
+	hash = c.bomRefHasher(der)
 	return
 }
