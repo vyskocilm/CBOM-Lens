@@ -1,8 +1,8 @@
 package cdxprops
 
 import (
-	"context" //nolint:staticcheck // cbom-lens is going to recognize even obsoleted crypto
-	"crypto/sha1"
+	"context"
+	"crypto/sha1" //nolint:staticcheck // cbom-lens is going to recognize even obsoleted crypto
 	"crypto/sha256"
 	"crypto/x509"
 	"crypto/x509/pkix"
@@ -35,7 +35,7 @@ type certOuterStruct struct {
 	Signature asn1.BitString
 }
 
-// public key instraxtructure (X) - used for x509.Certificates and public keys
+// public key infrastructure (X) - used for x509.Certificates and public keys
 type pkixStruct struct {
 	Algorithm pkix.AlgorithmIdentifier
 	PublicKey asn1.BitString
@@ -48,7 +48,7 @@ type pkcs8Struct struct {
 }
 
 // sigAlgOID returns oid of a signature algorithm for x509 Certificate
-// or empty string is it fails
+// or empty string if it fails
 func sigAlgOID(cert *x509.Certificate) string {
 	var outer certOuterStruct
 	if _, err := asn1.Unmarshal(cert.Raw, &outer); err != nil {

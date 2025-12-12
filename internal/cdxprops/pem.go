@@ -103,7 +103,7 @@ func (c Converter) analyzeParseError(block model.PEMBlock, origErr error) ([]cdx
 			return nil, errors.Join(origErr, err)
 		}
 		return []cdx.Component{algo}, nil
-	case "BEGIN PUBLIC KEY", "PUBLIC KEY":
+	case "PUBLIC KEY":
 		key, algo, err := c.unsupportedPKIX(block.Bytes)
 		if err != nil {
 			return nil, errors.Join(origErr, err)
@@ -123,7 +123,7 @@ func (c Converter) unsupportedPKCS8PrivateKey(der []byte) (cdx.Component, error)
 	}
 	info, ok := unsupportedAlgorithms[pkcs8.Algo.Algorithm.String()]
 	if !ok {
-		return cdx.Component{}, fmt.Errorf("unsusported fallback oid %q", pkcs8.Algo.Algorithm.String())
+		return cdx.Component{}, fmt.Errorf("unsupported fallback oid %q", pkcs8.Algo.Algorithm.String())
 	}
 
 	algo := info.componentWOBomRef(c.czertainly)
