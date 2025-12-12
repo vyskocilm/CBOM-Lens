@@ -187,15 +187,8 @@ func (c Converter) hashAlgorithmCompo(name string) cdx.Component {
 
 	var info hashAlgorithmInfo
 	if h, ok := stringToHash[name]; ok {
-		if !ok {
-			info = unsupportedInfo
-			info.Name = name
-		} else {
-			info, ok = hashInfoMap[h]
-			if !ok {
-				info = unsupportedInfo
-				info.Name = name
-			}
+		if ok {
+			info = hashInfoMap[h]
 		}
 	} else {
 		i, ok := hashInfoMap2[name]

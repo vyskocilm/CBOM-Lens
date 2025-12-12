@@ -14,6 +14,7 @@ var data embed.FS
 
 const MLDSA65PrivateKey = "testdata/ml-dsa-65-private-key.pem"
 const MLDSA65PublicKey = "testdata/ml-dsa-65-public-key.pem"
+const MLDSA65Certificate = "testdata/ml-dsa-65-cert.pem"
 
 func TestData(path string) ([]byte, error) {
 	return data.ReadFile(path)
