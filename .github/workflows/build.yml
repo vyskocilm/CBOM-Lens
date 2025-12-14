@@ -3,6 +3,8 @@ name: Build
 on:
   push:
     branches: [ "main" ]
+    tags:
+      - '*'
 
 # Cancel in-progress runs of the same workflow on the same branch
 concurrency:
@@ -17,7 +19,7 @@ env:
   APP_NAME: cbom-lens
   # Common build flags
   GOFLAGS: -trimpath
-  LDFLAGS: -s -w -X "main.version=${{ github.sha }}"
+  LDFLAGS: -s -w -X main.version=${{ github.ref_name }}
 
 jobs:
   build:
