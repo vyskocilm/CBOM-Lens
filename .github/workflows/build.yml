@@ -12,11 +12,13 @@ concurrency:
   cancel-in-progress: true
 
 permissions:
-  contents: read
+  contents: write
 
 env:
   # Change this to your binary name
   APP_NAME: cbom-lens
+  # Version string for binaries (tag name on tag builds, branch name otherwise)
+  VERSION: ${{ github.ref_name }}
   # Common build flags
   GOFLAGS: -trimpath
   LDFLAGS: -s -w -X main.version=${{ github.ref_name }}
@@ -71,7 +73,7 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p dist
-          NAME="${APP_NAME}-${GOOS}-${GOARCH}"
+          NAME="${APP_NAME}-${VERSION}-${GOOS}-${GOARCH}"
           BIN="dist/${NAME}${{ matrix.ext }}"
           echo "Building -> ${BIN}"
           go build $GOFLAGS -ldflags "$LDFLAGS" -o "$BIN" ./cmd/cbom-lens
@@ -82,7 +84,7 @@ jobs:
       - name: Checksums (per-artifact)
         run: |
           set -euo pipefail
-          NAME="${APP_NAME}-${{ matrix.goos }}-${{ matrix.goarch }}"
+          NAME="${APP_NAME}-${VERSION}-${{ matrix.goos }}-${{ matrix.goarch }}"
           cd dist
           # Only hash this job's outputs to keep checksums specific
           FILES=("$NAME${{ matrix.ext }}")
@@ -101,8 +103,22 @@ jobs:
       - name: Upload artifact (${{ matrix.goos }}/${{ matrix.goarch }})
         uses: actions/upload-artifact@v5
         with:
-          name: ${{ env.APP_NAME }}-${{ matrix.goos }}-${{ matrix.goarch }}
+          name: ${{ env.APP_NAME }}-${{ env.VERSION }}-${{ matrix.goos }}-${{ matrix.goarch }}
           path: |
-            dist/${{ env.APP_NAME }}-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.ext }}
-            dist/SHA256SUMS-${{ env.APP_NAME }}-${{ matrix.goos }}-${{ matrix.goarch }}*.txt
+            dist/${{ env.APP_NAME }}-${{ env.VERSION }}-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.ext }}
+            dist/SHA256SUMS-${{ env.APP_NAME }}-${{ env.VERSION }}-${{ matrix.goos }}-${{ matrix.goarch }}*.txt
           if-no-files-found: warn
+
+      - name: Release artifact (${{ matrix.goos }}/${{ matrix.goarch }})
+        if: github.ref_type == 'tag'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: ${{ github.ref_name }}
+          draft: false
+          prerelease: false
+          files: |
+            dist/${{ env.APP_NAME }}-${{ env.VERSION }}-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.ext }}
+            dist/SHA256SUMS-${{ env.APP_NAME }}-${{ env.VERSION }}-${{ matrix.goos }}-${{ matrix.goarch }}*.txt
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
