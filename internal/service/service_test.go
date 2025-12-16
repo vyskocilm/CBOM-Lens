@@ -22,7 +22,7 @@ func TestMain(m *testing.M) {
 	// Hidden service code unit testing protocol.
 	// If _LENS_PRINT_STDOUT or _LENS_PRINT_STDERR are set, emit their values to the
 	// respective stream and return immediately.
-	// If _LENS_PRINT_STDIN is called, then the content of stdin is printed to stdout
+	// If _LENS_PRINT_STDIN is set, then the content of stdin is printed to stdout
 	// Used by test harnesses to exercise process spawning, stdout/stderr capture
 	var testingCode bool
 	if x := os.Getenv("_LENS_PRINT_STDOUT"); x != "" {
