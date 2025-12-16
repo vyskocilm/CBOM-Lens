@@ -200,7 +200,14 @@ func (s *Server) discoverCertificate(w http.ResponseWriter, r *http.Request) {
 			toJsonErr(r.Context(), w, generalErrMsgResp{Message: "Decoding attribute failed."}, http.StatusBadRequest)
 			return
 		}
-		decodedAttr, err := base64.StdEncoding.DecodeString(req.Attributes[0].Content[0].Data.Code)
+
+		data, ok := req.Attributes[0].Content[0].Data.(attrCodeblockContentData)
+		if !ok {
+			toJsonErr(r.Context(), w, generalErrMsgResp{Message: "Decoding attribute data failed: not expected type."}, http.StatusBadRequest)
+			return
+		}
+
+		decodedAttr, err := base64.StdEncoding.DecodeString(data.Code)
 		if err != nil {
 			slog.DebugContext(ctx, "Decoding attribute failed.", slog.String("error", err.Error()))
 			toJsonErr(r.Context(), w, generalErrMsgResp{Message: "Decoding attribute failed."}, http.StatusBadRequest)
