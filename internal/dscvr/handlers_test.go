@@ -184,6 +184,7 @@ func TestServer_validateAttributes(t *testing.T) {
 		{
 			UUID:        lensConfigurationAttrUUID,
 			Name:        lensConfigurationAttrName,
+			Type:        ptrString(lensConfigurationAttrType),
 			ContentType: ptrString(lensConfigurationAttrContentType),
 			Content: []attrCodeblockContent{
 				{
@@ -220,7 +221,7 @@ func TestServer_validateAttributes_InvalidJSON(t *testing.T) {
 	s.validateAttributes(w, req)
 
 	resp := w.Result()
-	require.Equal(t, http.StatusBadRequest, resp.StatusCode)
+	require.Equal(t, http.StatusUnprocessableEntity, resp.StatusCode)
 }
 
 func TestServer_validateAttributes_ValidationError(t *testing.T) {
@@ -283,7 +284,6 @@ func TestServer_discoverCertificate(t *testing.T) {
 
 func TestServer_discoverCertificate_WithAttributes(t *testing.T) {
 	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
 
 	mockSv := mock.NewMockSupervisorContract(ctrl)
 	s := setupTestServerWithSupervisor(t, mockSv)

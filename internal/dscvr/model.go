@@ -3,7 +3,6 @@ package dscvr
 import (
 	"encoding/base64"
 	"encoding/json"
-	"errors"
 	"fmt"
 
 	"github.com/CZERTAINLY/CBOM-lens/internal/model"
@@ -141,12 +140,15 @@ func (a *attrCodeblock) UnmarshalJSON(b []byte) error {
 		return err
 	}
 
+	var typ string
 	if aux.Type == nil {
-		return errors.New("can't determine attribute type")
+		typ = "data"
+	} else {
+		typ = *aux.Type
 	}
 
-	switch *aux.Type {
-	case "data":
+	switch typ {
+	case "", "data":
 		for i, content := range aux.Content {
 			var data attrCodeblockContentData
 			err := json.Unmarshal(content.RawData, &data)
@@ -225,7 +227,8 @@ func validateAttr(attrs []attrCodeblock) error {
 			if err != nil {
 				return fmt.Errorf("attribute uuid: %q, name: %q is not a valid yaml cbom-lens scan configuration: %s", cpy.UUID, cpy.Name, err)
 			}
-
+		case lensConfigurationInfoAttrUUID:
+			return nil
 		default:
 			return fmt.Errorf("unknown attribute uuid: %q name: %q", cpy.UUID, cpy.Name)
 		}
