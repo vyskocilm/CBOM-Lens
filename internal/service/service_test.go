@@ -197,7 +197,6 @@ service:
 		}
 		supervisor.ConfigureJob(t.Context(), t.Name(), override)
 
-		require.NoError(t, err)
 
 		g.Wait()
 		stdout := buf.String()
