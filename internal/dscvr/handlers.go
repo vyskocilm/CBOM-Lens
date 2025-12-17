@@ -286,7 +286,7 @@ func (s *Server) validateAttributes(w http.ResponseWriter, r *http.Request) {
 	var attrs []attrCodeblock
 	if err := json.Unmarshal(b, &attrs); err != nil {
 		slog.DebugContext(ctx, "Calling `json.Unmarshal()` failed", slog.String("error", err.Error()))
-		toJsonErr(r.Context(), w, generalErrMsgResp{Message: fmt.Sprintf("Failed to unmarshal request: %s", err)}, http.StatusUnprocessableEntity)
+		toJsonErr(r.Context(), w, generalErrMsgResp{Message: "Request body contains invalid JSON."}, http.StatusUnprocessableEntity)
 		return
 	}
 	type validationErrResp []string

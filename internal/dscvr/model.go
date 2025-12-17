@@ -167,7 +167,7 @@ func (a *attrCodeblock) UnmarshalJSON(b []byte) error {
 			aux.Content[i].Data = data
 		}
 	default:
-		return fmt.Errorf("unsupported attribute type %s: expected data or info", *aux.Type)
+		return fmt.Errorf("unsupported attribute type %s: expected \"data\" or \"info\"", *aux.Type)
 	}
 
 	a.Version = aux.Version
