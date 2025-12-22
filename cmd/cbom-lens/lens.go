@@ -184,7 +184,9 @@ func (s Lens) nmapScan(ctx context.Context, scanner nmap.Scanner, ip netip.Addr,
 		return
 	}
 
-	detections <- *d
+	for _, detection := range d {
+		detections <- detection
+	}
 }
 
 func filesystems(ctx context.Context, counter model.Stats, cfg model.Filesystem) (iter.Seq2[model.Entry, error], error) {
