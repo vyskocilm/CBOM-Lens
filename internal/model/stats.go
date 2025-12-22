@@ -4,10 +4,10 @@ import "iter"
 
 const (
 	StatsSourcesTotal  = "/sources/total"
-	StatsErrSources    = "/sources/err"
+	StatsErrSources    = "/sources/error"
 	StatsFilesTotal    = "/files/total"
 	StatsFilesExcluded = "/files/excluded"
-	StatsFilesErr      = "/files/err"
+	StatsFilesErr      = "/files/error"
 )
 
 type Stats interface {

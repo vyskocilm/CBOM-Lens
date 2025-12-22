@@ -32,13 +32,13 @@ func TestIncSkippedSources(t *testing.T) {
 	s.IncErrSources()
 
 	collected := maps.Collect(s.Stats())
-	require.Equal(t, "3", collected[t.Name()+model.StatsErrSkipped])
+	require.Equal(t, "3", collected[t.Name()+model.StatsErrSources])
 }
 
 func TestIncFiles(t *testing.T) {
 	s := stats.New(t.Name())
 
-	for i := 0; i < 10; i++ {
+	for range 10 {
 		s.IncFiles()
 	}
 
@@ -82,7 +82,7 @@ func TestStatsIterator(t *testing.T) {
 
 	require.Len(t, collected, 5)
 	require.Equal(t, "2", collected[t.Name()+model.StatsSourcesTotal])
-	require.Equal(t, "1", collected[t.Name()+model.StatsErrSkipped])
+	require.Equal(t, "1", collected[t.Name()+model.StatsErrSources])
 	require.Equal(t, "1", collected[t.Name()+model.StatsFilesTotal])
 	require.Equal(t, "1", collected[t.Name()+model.StatsFilesExcluded])
 	require.Equal(t, "1", collected[t.Name()+model.StatsFilesErr])

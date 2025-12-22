@@ -42,7 +42,7 @@ func TestWrongHost(t *testing.T) {
 		switch {
 		case strings.HasSuffix(key, model.StatsSourcesTotal):
 			exp = "1"
-		case strings.HasSuffix(key, model.StatsErrSkipped):
+		case strings.HasSuffix(key, model.StatsErrSources):
 			exp = "1"
 		}
 		require.Equal(t, exp, value)
