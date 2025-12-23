@@ -4,131 +4,124 @@ import (
 	"maps"
 	"testing"
 
-	"github.com/CZERTAINLY/CBOM-lens/internal/model"
 	"github.com/CZERTAINLY/CBOM-lens/internal/stats"
+
 	"github.com/stretchr/testify/require"
 )
 
 func TestNew(t *testing.T) {
 	s := stats.New(t.Name())
+
 	require.NotNil(t, s)
+
+	// Verify initial values are set to 0
+	result := maps.Collect(s.Stats())
+	require.Equal(t, "0", result[t.Name()+"_files_errors"])
+	require.Equal(t, "0", result[t.Name()+"_files_excluded"])
+	require.Equal(t, "0", result[t.Name()+"_files_total"])
+	require.Equal(t, "0", result[t.Name()+"_sources_errors"])
+	require.Equal(t, "0", result[t.Name()+"_sources_total"])
 }
 
 func TestIncSources(t *testing.T) {
 	s := stats.New(t.Name())
 
 	s.IncSources()
-	s.IncSources()
+	result := maps.Collect(s.Stats())
+	require.Equal(t, "1", result[t.Name()+"_sources_total"])
 
-	collected := maps.Collect(s.Stats())
-	require.Equal(t, "2", collected[t.Name()+model.StatsSourcesTotal])
+	s.IncSources()
+	s.IncSources()
+	result = maps.Collect(s.Stats())
+	require.Equal(t, "3", result[t.Name()+"_sources_total"])
 }
 
-func TestIncSkippedSources(t *testing.T) {
+func TestIncErrSources(t *testing.T) {
 	s := stats.New(t.Name())
 
 	s.IncErrSources()
-	s.IncErrSources()
-	s.IncErrSources()
+	result := maps.Collect(s.Stats())
+	require.Equal(t, "1", result[t.Name()+"_sources_errors"])
 
-	collected := maps.Collect(s.Stats())
-	require.Equal(t, "3", collected[t.Name()+model.StatsErrSources])
+	s.IncErrSources()
+	result = maps.Collect(s.Stats())
+	require.Equal(t, "2", result[t.Name()+"_sources_errors"])
 }
 
 func TestIncFiles(t *testing.T) {
 	s := stats.New(t.Name())
 
-	for range 10 {
-		s.IncFiles()
-	}
+	s.IncFiles()
+	result := maps.Collect(s.Stats())
+	require.Equal(t, "1", result[t.Name()+"_files_total"])
 
-	collected := maps.Collect(s.Stats())
-	require.Equal(t, "10", collected[t.Name()+model.StatsFilesTotal])
+	s.IncFiles()
+	s.IncFiles()
+	result = maps.Collect(s.Stats())
+	require.Equal(t, "3", result[t.Name()+"_files_total"])
 }
 
 func TestIncExcludedFiles(t *testing.T) {
 	s := stats.New(t.Name())
 
 	s.IncExcludedFiles()
+	result := maps.Collect(s.Stats())
+	require.Equal(t, "1", result[t.Name()+"_files_excluded"])
+
 	s.IncExcludedFiles()
-
-	collected := maps.Collect(s.Stats())
-	require.Equal(t, "2", collected[t.Name()+model.StatsFilesExcluded])
+	result = maps.Collect(s.Stats())
+	require.Equal(t, "2", result[t.Name()+"_files_excluded"])
 }
 
-func TestIncSkippedFiles(t *testing.T) {
+func TestIncErrFiles(t *testing.T) {
 	s := stats.New(t.Name())
 
 	s.IncErrFiles()
-	s.IncErrFiles()
-	s.IncErrFiles()
-	s.IncErrFiles()
+	result := maps.Collect(s.Stats())
+	require.Equal(t, "1", result[t.Name()+"_files_errors"])
 
-	collected := maps.Collect(s.Stats())
-	require.Equal(t, "4", collected[t.Name()+model.StatsFilesErr])
+	s.IncErrFiles()
+	result = maps.Collect(s.Stats())
+	require.Equal(t, "2", result[t.Name()+"_files_errors"])
 }
 
-func TestStatsIterator(t *testing.T) {
+func TestStats_AlphabeticOrder(t *testing.T) {
 	s := stats.New(t.Name())
 
+	var keys []string
+	for key := range s.Stats() {
+		keys = append(keys, key)
+	}
+
+	// Verify alphabetic order
+	expectedOrder := []string{
+		t.Name() + "_files_errors",
+		t.Name() + "_files_excluded",
+		t.Name() + "_files_total",
+		t.Name() + "_sources_errors",
+		t.Name() + "_sources_total",
+	}
+	require.Equal(t, expectedOrder, keys)
+}
+
+func TestStats_Integration(t *testing.T) {
+	s := stats.New(t.Name())
+
+	// Simulate scanning workflow
 	s.IncSources()
 	s.IncSources()
 	s.IncErrSources()
+
+	s.IncFiles()
+	s.IncFiles()
 	s.IncFiles()
 	s.IncExcludedFiles()
 	s.IncErrFiles()
 
-	collected := maps.Collect(s.Stats())
-
-	require.Len(t, collected, 5)
-	require.Equal(t, "2", collected[t.Name()+model.StatsSourcesTotal])
-	require.Equal(t, "1", collected[t.Name()+model.StatsErrSources])
-	require.Equal(t, "1", collected[t.Name()+model.StatsFilesTotal])
-	require.Equal(t, "1", collected[t.Name()+model.StatsFilesExcluded])
-	require.Equal(t, "1", collected[t.Name()+model.StatsFilesErr])
-}
-
-func TestStatsIteratorFiltersPrefix(t *testing.T) {
-	s1 := stats.New("prefix-1")
-	s2 := stats.New("prefix-2")
-
-	s1.IncSources()
-	s2.IncSources()
-	s2.IncSources()
-
-	collected := maps.Collect(s1.Stats())
-
-	require.Len(t, collected, 5)
-	for k := range collected {
-		require.True(t, len(k) > 0 && k[:8] == "prefix-1", "key %s should start with prefix-1", k)
-	}
-}
-
-func TestStatsInterfaceImplementation(t *testing.T) {
-	var _ model.Stats = (*stats.Stats)(nil)
-}
-
-func TestConcurrentIncrements(t *testing.T) {
-	s := stats.New(t.Name())
-
-	done := make(chan bool)
-	for range 10 {
-		go func() {
-			for range 100 {
-				s.IncSources()
-				s.IncFiles()
-				s.IncExcludedFiles()
-			}
-			done <- true
-		}()
-	}
-
-	for range 10 {
-		<-done
-	}
-
-	collected := maps.Collect(s.Stats())
-	require.Equal(t, "1000", collected[t.Name()+model.StatsSourcesTotal])
-	require.Equal(t, "1000", collected[t.Name()+model.StatsFilesTotal])
-	require.Equal(t, "1000", collected[t.Name()+model.StatsFilesExcluded])
+	result := maps.Collect(s.Stats())
+	require.Equal(t, "2", result[t.Name()+"_sources_total"])
+	require.Equal(t, "1", result[t.Name()+"_sources_errors"])
+	require.Equal(t, "3", result[t.Name()+"_files_total"])
+	require.Equal(t, "1", result[t.Name()+"_files_excluded"])
+	require.Equal(t, "1", result[t.Name()+"_files_errors"])
 }

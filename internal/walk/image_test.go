@@ -40,9 +40,9 @@ func TestWrongHost(t *testing.T) {
 	for key, value := range counter.Stats() {
 		var exp = "0"
 		switch {
-		case strings.HasSuffix(key, model.StatsSourcesTotal):
+		case strings.HasSuffix(key, "sources_total"):
 			exp = "1"
-		case strings.HasSuffix(key, model.StatsErrSources):
+		case strings.HasSuffix(key, "sources_errors"):
 			exp = "1"
 		}
 		require.Equal(t, exp, value)
@@ -146,9 +146,9 @@ RUN echo "this is a new layer, longer content is 42" > /a/c/c.txt
 		for key, value := range counter.Stats() {
 			var exp = "0"
 			switch {
-			case strings.HasSuffix(key, model.StatsSourcesTotal):
+			case strings.HasSuffix(key, "sources_total"):
 				exp = "1"
-			case strings.HasSuffix(key, model.StatsFilesExcluded) || strings.HasSuffix(key, model.StatsFilesTotal):
+			case strings.HasSuffix(key, "files_excluded") || strings.HasSuffix(key, "files_total"):
 				require.NotEqual(t, "0", value)
 				continue
 			}

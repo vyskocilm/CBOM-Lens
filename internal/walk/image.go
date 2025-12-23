@@ -10,6 +10,7 @@ import (
 
 	"github.com/CZERTAINLY/CBOM-lens/internal/log"
 	"github.com/CZERTAINLY/CBOM-lens/internal/model"
+	"github.com/CZERTAINLY/CBOM-lens/internal/stats"
 
 	"github.com/anchore/stereoscope"
 	"github.com/anchore/stereoscope/pkg/file"
@@ -22,7 +23,7 @@ import (
 )
 
 // Images traverse through all defined containers and their images and all files inside
-func Images(parentContext context.Context, counter model.Stats, configs model.ContainersConfig) iter.Seq2[model.Entry, error] {
+func Images(parentContext context.Context, counter *stats.Stats, configs model.ContainersConfig) iter.Seq2[model.Entry, error] {
 	return func(yield func(model.Entry, error) bool) {
 		for _, cc := range configs {
 			counter.IncSources()
@@ -68,7 +69,7 @@ func Images(parentContext context.Context, counter model.Stats, configs model.Co
 
 // FS recursively walks the squashed layers of an OCI image.
 // Each model.Entry's Path() is a real path of file inside.
-func image1(ctx context.Context, counter model.Stats, image *image.Image) iter.Seq2[model.Entry, error] {
+func image1(ctx context.Context, counter *stats.Stats, image *image.Image) iter.Seq2[model.Entry, error] {
 	if image == nil {
 		return func(yield func(model.Entry, error) bool) {
 			yield(nil, errors.New("image is nil"))

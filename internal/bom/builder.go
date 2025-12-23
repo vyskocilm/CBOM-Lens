@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/CZERTAINLY/CBOM-lens/internal/model"
+	"github.com/CZERTAINLY/CBOM-lens/internal/stats"
 	cdx "github.com/CycloneDX/cyclonedx-go"
 	"github.com/google/uuid"
 )
@@ -33,7 +34,7 @@ type Builder struct {
 	components   map[string]*cdx.Component
 	dependencies map[string]*[]string
 	properties   []cdx.Property
-	counter      model.Stats
+	counter      *stats.Stats
 }
 
 func NewBuilder(config model.CBOM) (*Builder, error) {
@@ -62,7 +63,7 @@ func NewBuilder(config model.CBOM) (*Builder, error) {
 	}, nil
 }
 
-func (b *Builder) WithCounter(counter model.Stats) *Builder {
+func (b *Builder) WithCounter(counter *stats.Stats) *Builder {
 	b.counter = counter
 	return b
 }
@@ -204,7 +205,7 @@ func addEvidenceLocation(c *cdx.Component, locations ...string) {
 	c.Evidence.Occurrences = &occurences
 }
 
-func bomStatistics(counter model.Stats) []cdx.Property {
+func bomStatistics(counter *stats.Stats) []cdx.Property {
 	stats := maps.Collect(counter.Stats())
 	var props = make([]cdx.Property, 0, len(stats))
 	for _, name := range slices.Sorted(maps.Keys(stats)) {

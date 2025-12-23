@@ -77,7 +77,7 @@ func TestScanner_Do(t *testing.T) {
 	for key, value := range counter.Stats() {
 		var exp = "0"
 		switch {
-		case strings.HasSuffix(key, model.StatsFilesTotal):
+		case strings.HasSuffix(key, "files_total"):
 			exp = "2"
 		}
 		require.Equal(t, exp, value, key)
@@ -131,9 +131,9 @@ func TestScanner_Do_Permissions(t *testing.T) {
 	for key, value := range counter.Stats() {
 		var exp = "0"
 		switch {
-		case strings.HasSuffix(key, model.StatsFilesTotal):
+		case strings.HasSuffix(key, "files_total"):
 			exp = "2"
-		case strings.HasSuffix(key, model.StatsFilesErr):
+		case strings.HasSuffix(key, "files_errors"):
 			exp = "1"
 		}
 		require.Equal(t, exp, value, key)

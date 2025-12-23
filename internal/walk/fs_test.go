@@ -9,7 +9,6 @@ import (
 	"testing/fstest"
 	"time"
 
-	"github.com/CZERTAINLY/CBOM-lens/internal/model"
 	"github.com/CZERTAINLY/CBOM-lens/internal/stats"
 	"github.com/CZERTAINLY/CBOM-lens/internal/walk"
 	"github.com/stretchr/testify/require"
@@ -93,9 +92,9 @@ func TestFstest(t *testing.T) {
 	for key, value := range counter.Stats() {
 		var exp = "0"
 		switch {
-		case strings.HasSuffix(key, model.StatsFilesExcluded):
+		case strings.HasSuffix(key, "files_excluded"):
 			exp = "1"
-		case strings.HasSuffix(key, model.StatsFilesTotal):
+		case strings.HasSuffix(key, "files_total"):
 			exp = "3"
 		}
 		require.Equal(t, exp, value, key)

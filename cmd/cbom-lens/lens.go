@@ -18,6 +18,7 @@ import (
 	"github.com/CZERTAINLY/CBOM-lens/internal/scanner/pem"
 	"github.com/CZERTAINLY/CBOM-lens/internal/scanner/x509"
 	"github.com/CZERTAINLY/CBOM-lens/internal/service"
+	"github.com/CZERTAINLY/CBOM-lens/internal/stats"
 	"github.com/CZERTAINLY/CBOM-lens/internal/walk"
 
 	"golang.org/x/sync/errgroup"
@@ -32,10 +33,10 @@ type Lens struct {
 	nmaps       []nmap.Scanner
 	ips         []netip.Addr
 	converter   cdxprops.Converter
-	counter     model.Stats
+	counter     *stats.Stats
 }
 
-func NewLens(ctx context.Context, counter model.Stats, config model.Scan) (Lens, error) {
+func NewLens(ctx context.Context, counter *stats.Stats, config model.Scan) (Lens, error) {
 	if config.Version != 0 {
 		return Lens{}, fmt.Errorf("config version %d is not supported, expected 0", config.Version)
 	}
@@ -189,7 +190,7 @@ func (s Lens) nmapScan(ctx context.Context, scanner nmap.Scanner, ip netip.Addr,
 	}
 }
 
-func filesystems(ctx context.Context, counter model.Stats, cfg model.Filesystem) (iter.Seq2[model.Entry, error], error) {
+func filesystems(ctx context.Context, counter *stats.Stats, cfg model.Filesystem) (iter.Seq2[model.Entry, error], error) {
 	var filesystems iter.Seq2[model.Entry, error]
 	if !cfg.Enabled {
 		return filesystems, nil
@@ -219,7 +220,7 @@ func filesystems(ctx context.Context, counter model.Stats, cfg model.Filesystem)
 	return ret, nil
 }
 
-func containers(ctx context.Context, counter model.Stats, config model.Containers) iter.Seq2[model.Entry, error] {
+func containers(ctx context.Context, counter *stats.Stats, config model.Containers) iter.Seq2[model.Entry, error] {
 	if !config.Enabled {
 		return nil
 	}

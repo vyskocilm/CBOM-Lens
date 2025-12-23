@@ -164,7 +164,7 @@ func doScan(cmd *cobra.Command, args []string) error {
 	slog.DebugContext(ctx, "_scan", "configPath", configPath)
 	slog.DebugContext(ctx, "_scan", "config", config)
 
-	counter := stats.New("/cbom-lens")
+	counter := stats.New("cbom_lens")
 	lens, err := NewLens(ctx, counter, config)
 	if err != nil {
 		return err

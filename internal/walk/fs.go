@@ -10,10 +10,11 @@ import (
 	"path/filepath"
 
 	"github.com/CZERTAINLY/CBOM-lens/internal/model"
+	"github.com/CZERTAINLY/CBOM-lens/internal/stats"
 )
 
 // Roots is a convenience wrapper around FS for os.Root. See FS for details.
-func Roots(ctx context.Context, counter model.Stats, roots ...*os.Root) iter.Seq2[model.Entry, error] {
+func Roots(ctx context.Context, counter *stats.Stats, roots ...*os.Root) iter.Seq2[model.Entry, error] {
 	return func(yield func(model.Entry, error) bool) {
 		for _, root := range roots {
 			for entry, err := range FS(ctx, counter, root.FS(), root.Name()) {
@@ -29,7 +30,7 @@ func Roots(ctx context.Context, counter model.Stats, roots ...*os.Root) iter.Seq
 // Or an error if file information retrieval fails.
 // Each model.Entry's Path() is prefixed with name of a filesystem. In most cases it'll be an absolute
 // path to the file. It does not follow symlinks.
-func FS(ctx context.Context, counter model.Stats, root fs.FS, name string) iter.Seq2[model.Entry, error] {
+func FS(ctx context.Context, counter *stats.Stats, root fs.FS, name string) iter.Seq2[model.Entry, error] {
 	if root == nil {
 		slog.WarnContext(ctx, "root is nil: not iterating")
 		return nil

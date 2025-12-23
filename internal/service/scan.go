@@ -12,6 +12,7 @@ import (
 	"github.com/CZERTAINLY/CBOM-lens/internal/log"
 	"github.com/CZERTAINLY/CBOM-lens/internal/model"
 	"github.com/CZERTAINLY/CBOM-lens/internal/parallel"
+	"github.com/CZERTAINLY/CBOM-lens/internal/stats"
 )
 
 // Detector provides content analysis for a single file.
@@ -44,7 +45,7 @@ type Scan struct {
 	limit             int
 	skipIfBigger      int64
 	detectors         []Detector
-	counter           model.Stats
+	counter           *stats.Stats
 	pool              sync.Pool
 	poolNewCounter    atomic.Int32
 	poolPutCounter    atomic.Int32
@@ -57,7 +58,7 @@ type Stats struct {
 	PoolPutErrCounter int
 }
 
-func New(limit int, counter model.Stats, detectors []Detector) *Scan {
+func New(limit int, counter *stats.Stats, detectors []Detector) *Scan {
 	const skipIfBigger = 10 * 1024 * 1024
 	s := &Scan{
 		counter:      counter,
