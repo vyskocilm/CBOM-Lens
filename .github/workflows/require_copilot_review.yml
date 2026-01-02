@@ -10,9 +10,14 @@ permissions:
 
 jobs:
   gate:
-    if: ${{ !github.event.pull_request.draft }} # skip drafts
+    # skip run if PR is draft or is from renovate bot
+    if: >
+      !(github.event.pull_request.draft ||
+      github.event.pull_request.user.login == 'renovate[bot]' ||
+      github.event.pull_request.user.login == 'self-hosted-renovate[bot]')
     name: Check for Copilot Review
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/github-script@v8
         with:
