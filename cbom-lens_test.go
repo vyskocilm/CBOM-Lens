@@ -396,7 +396,7 @@ service:
 	require.NotNil(t, cert)
 	require.NotNil(t, cert.Evidence)
 	require.NotNil(t, cert.Evidence.Occurrences)
-	require.Len(t, cert.Evidence.Occurrences, 3)
+	require.Len(t, *cert.Evidence.Occurrences, 3)
 
 	containerRe := regexp.MustCompile(`^container://.+/cert\.pem$`)
 	filesystemRe := regexp.MustCompile(`^filesystem://.*/cert\.pem$`)
