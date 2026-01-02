@@ -17,7 +17,7 @@ import (
 func TestFS_NilRoot(t *testing.T) {
 	t.Parallel()
 	counter := stats.New(t.Name())
-	seq := walk.FS(t.Context(), counter, nil, "fstest://")
+	seq := walk.FS(t.Context(), counter, nil, "/")
 	// When root is nil, FS should return a nil iterator and not panic.
 	require.Nil(t, any(seq))
 	for _, value := range counter.Stats() {
@@ -37,7 +37,7 @@ func TestFS_CanceledContext(t *testing.T) {
 	cancel()
 
 	counter := stats.New(t.Name())
-	seq := walk.FS(ctx, counter, root, "fstest://")
+	seq := walk.FS(ctx, counter, root, "/")
 	require.NotNil(t, seq)
 	count := 0
 	for range seq {
@@ -74,15 +74,15 @@ func TestFstest(t *testing.T) {
 
 	actual := make([]then, 0, 2)
 	counter := stats.New(t.Name())
-	for entry, err := range walk.FS(t.Context(), counter, root, "fstest://") {
+	for entry, err := range walk.FS(t.Context(), counter, root, "/") {
 		actual = append(actual, testEntry(t, entry, err))
 	}
 
 	require.Len(t, actual, 2)
 	require.ElementsMatch(t,
 		[]then{
-			{path: filepath.Join("fstest://", "a"), size: 3},
-			{path: filepath.Join("fstest://", "b/b.txt"), size: 6},
+			{location: filepath.Join("/", "a"), size: 3},
+			{location: filepath.Join("/", "b/b.txt"), size: 6},
 		},
 		actual,
 	)

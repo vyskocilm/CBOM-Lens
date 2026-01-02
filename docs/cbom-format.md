@@ -79,8 +79,8 @@ Example of an algorithm component in a CBOM:
   "name": "RSA-4096",
   "evidence": {
     "occurrences": [
-      { "location": "testing/cert.pem" },
-      { "location": "testing/key.pem" }
+      { "location": "filesystem:///testing/cert.pem" },
+      { "location": "filesystem:///testing/key.pem" }
     ]
   }
 }
@@ -146,6 +146,30 @@ By combining evidence with stable `bom-ref` identifiers, analysis tools can:
 
 - See all the places where a particular certificate or key is used.
 - Understand relationships between algorithms, keys, and certificates.
+
+### Location format
+
+cbom-lens reports source locations as URIs or endpoints.
+
+- Filesystem: `filesystem:///absolute/path`
+- Container: `container://<config-name>/<image-ref>/<absolute-path>`
+  - <config-name> comes from your configuration
+  - <image-ref> can be a tag (e.g., repo:tag) or a digest (e.g., sha256:...)
+- Network endpoint: `host:port` (not a URI, just an address)
+
+Example:
+
+`cbom-lens` correlates the same TLS certificate across three sources: the filesystem (`cert.pem`), the container image (`cert.pem`), and the HTTPS server listening on port `:37257`.
+
+```json
+"evidence": {
+  "occurrences": [
+    { "location": "container://docker/image-tag-or-digest:/cert.pem" },
+    { "location": "filesystem:///tmp/cert.pem" },
+    { "location": "localhost:37257" }
+  ]
+}
+```
 
 ---
 

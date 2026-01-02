@@ -27,7 +27,12 @@ func Images(parentContext context.Context, counter *stats.Stats, configs model.C
 	return func(yield func(model.Entry, error) bool) {
 		for _, cc := range configs {
 			counter.IncSources()
-			ctx := log.ContextAttrs(parentContext, slog.String("host", cc.Host))
+			ctx := log.ContextAttrs(parentContext,
+				slog.Group("container",
+					slog.String("name", cc.Name),
+					slog.String("host", cc.Host),
+				),
+			)
 			cli, err := newClient(ctx, cc)
 			if err != nil {
 				counter.IncErrSources()
@@ -57,7 +62,7 @@ func Images(parentContext context.Context, counter *stats.Stats, configs model.C
 				}
 
 				slog.DebugContext(ctx, "scanning", "image", ident)
-				for entry, err := range image1(ctx, counter, img) {
+				for entry, err := range image1(ctx, counter, cc.Name, img) {
 					if !yield(entry, err) {
 						return
 					}
@@ -69,7 +74,7 @@ func Images(parentContext context.Context, counter *stats.Stats, configs model.C
 
 // FS recursively walks the squashed layers of an OCI image.
 // Each model.Entry's Path() is a real path of file inside.
-func image1(ctx context.Context, counter *stats.Stats, image *image.Image) iter.Seq2[model.Entry, error] {
+func image1(ctx context.Context, counter *stats.Stats, name string, image *image.Image) iter.Seq2[model.Entry, error] {
 	if image == nil {
 		return func(yield func(model.Entry, error) bool) {
 			yield(nil, errors.New("image is nil"))
@@ -84,7 +89,7 @@ func image1(ctx context.Context, counter *stats.Stats, image *image.Image) iter.
 				counter.IncExcludedFiles()
 				return nil
 			}
-			if !yield(dentry{node: node, image: image}, nil) {
+			if !yield(dentry{name: name, node: node, image: image}, nil) {
 				close(done)
 			}
 			return nil
@@ -172,12 +177,21 @@ func imagesAll(ctx context.Context, cli *client.Client) iter.Seq2[*image.Image, 
 // dentry implements model.Entry for an image file node
 // uses OpenReference and FileCatalog.Get for Open/Stat operations
 type dentry struct {
+	name  string
 	node  filenode.FileNode
 	image *image.Image
 }
 
-func (e dentry) Path() string {
-	return string(e.node.RealPath)
+func (e dentry) Location() string {
+	var imageRef string
+
+	if e.image.Metadata.Tags != nil {
+		imageRef = e.image.Metadata.Tags[0].Identifier()
+	} else {
+		imageRef = e.image.Metadata.ManifestDigest
+	}
+
+	return "container://" + e.name + "/" + imageRef + string(e.node.RealPath)
 }
 
 func (e dentry) Open() (io.ReadCloser, error) {

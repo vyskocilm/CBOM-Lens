@@ -96,6 +96,7 @@ RUN echo "this is a new layer, longer content is 42" > /a/c/c.txt
 
 	req := testcontainers.ContainerRequest{
 		FromDockerfile: testcontainers.FromDockerfile{
+			Tag:        "testimage",
 			Context:    tempdir,
 			Dockerfile: "Dockerfile",
 		},
@@ -130,7 +131,7 @@ RUN echo "this is a new layer, longer content is 42" > /a/c/c.txt
 		actual := make([]then, 0, 10)
 		counter := stats.New(t.Name())
 		for entry, err := range walk.Images(t.Context(), counter, configs) {
-			if strings.HasPrefix(entry.Path(), "/a") {
+			if strings.Contains(entry.Location(), "/a") {
 				actual = append(actual, testEntry(t, entry, err))
 			}
 		}
@@ -138,8 +139,8 @@ RUN echo "this is a new layer, longer content is 42" > /a/c/c.txt
 		require.Len(t, actual, 2)
 		require.ElementsMatch(t,
 			[]then{
-				{path: "/a/a.txt", size: 12},
-				{path: "/a/c/c.txt", size: 42}, // len of RUN echo command above
+				{location: "/a/a.txt", size: 12},
+				{location: "/a/c/c.txt", size: 42}, // len of RUN echo command above
 			},
 			actual,
 		)
@@ -168,6 +169,7 @@ RUN echo "this is a new layer, longer content is 42" > /a/c/c.txt
 			Enabled: true,
 			Config: []model.ContainerConfig{
 				{
+					Name: "images",
 					Host: host,
 					Images: []string{
 						info.Image,
@@ -181,14 +183,26 @@ RUN echo "this is a new layer, longer content is 42" > /a/c/c.txt
 				t.Logf("err=%+v", err)
 				continue
 			}
-			if strings.HasPrefix(entry.Path(), "/a") {
+			if strings.Contains(entry.Location(), "/a") {
 				actual = append(actual, testEntry(t, entry, err))
 			}
 		}
 
 		require.GreaterOrEqual(t, len(actual), 2)
-		require.Contains(t, actual, then{path: "/a/a.txt", size: 12})
-		require.Contains(t, actual, then{path: "/a/c/c.txt", size: 42})
+		prefix := "container://images/testimage"
+		require.ElementsMatch(t,
+			[]then{
+				{
+					location: prefix + "/a/a.txt",
+					size:     12,
+				},
+				{
+					location: prefix + "/a/c/c.txt",
+					size:     42,
+				},
+			},
+			actual,
+		)
 
 		// we can't test anything - this runs under all docker
 		// images, so hard to say how this will ends
@@ -198,17 +212,17 @@ RUN echo "this is a new layer, longer content is 42" > /a/c/c.txt
 }
 
 type then struct {
-	path string
-	size int64
-	err  error
+	location string
+	size     int64
+	err      error
 }
 
 func testEntry(t *testing.T, entry model.Entry, err error) then {
 	t.Helper()
 	if err != nil {
 		return then{
-			path: entry.Path(),
-			err:  err,
+			location: entry.Location(),
+			err:      err,
 		}
 	}
 
@@ -225,5 +239,5 @@ func testEntry(t *testing.T, entry model.Entry, err error) then {
 	require.NoError(t, err)
 	require.Equal(t, int64(len(b)), info.Size())
 
-	return then{path: entry.Path(), size: int64(len(b))}
+	return then{location: entry.Location(), size: int64(len(b))}
 }

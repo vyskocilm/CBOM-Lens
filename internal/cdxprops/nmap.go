@@ -57,7 +57,7 @@ func (c Converter) parseNmap(ctx context.Context, port model.NmapPort) (compos [
 	switch port.Service.Name {
 	case "ssh":
 		compos = append(compos, c.sshToCompos(ctx, port)...)
-	case "ssl", "http", "https":
+	case "ssl", "http", "https", "https-alt":
 		c := c.tlsToCompos(ctx, port)
 		compos = append(compos, c...)
 	default:
