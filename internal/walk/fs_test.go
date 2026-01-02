@@ -81,8 +81,8 @@ func TestFstest(t *testing.T) {
 	require.Len(t, actual, 2)
 	require.ElementsMatch(t,
 		[]then{
-			{location: filepath.Join("/", "a"), size: 3},
-			{location: filepath.Join("/", "b/b.txt"), size: 6},
+			{location: "filesystem://" + filepath.Join("/", "a"), size: 3},
+			{location: "filesystem://" + filepath.Join("/", "b/b.txt"), size: 6},
 		},
 		actual,
 	)

@@ -139,8 +139,8 @@ RUN echo "this is a new layer, longer content is 42" > /a/c/c.txt
 		require.Len(t, actual, 2)
 		require.ElementsMatch(t,
 			[]then{
-				{location: "/a/a.txt", size: 12},
-				{location: "/a/c/c.txt", size: 42}, // len of RUN echo command above
+				{location: "container://TestImage/walk.OneImage/testimage/a/a.txt", size: 12},
+				{location: "container://TestImage/walk.OneImage/testimage/a/c/c.txt", size: 42}, // len of RUN echo command above
 			},
 			actual,
 		)
