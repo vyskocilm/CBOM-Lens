@@ -13,6 +13,8 @@ import (
 	"strconv"
 	"strings"
 
+	stdlog "log"
+
 	"github.com/CZERTAINLY/CBOM-lens/internal/model"
 	cdx "github.com/CycloneDX/cyclonedx-go"
 )
@@ -116,10 +118,16 @@ func (c Converter) Nmap(ctx context.Context, nmap model.Nmap) []model.Detection 
 			return nil
 		}
 
+		// converts http+ssl to https
+		proto := port.Service.Name
+		if port.Service.Tunnel == "ssl" {
+			proto += "s"
+		}
+
 		detections[i] = model.Detection{
 			Source:       "NMAP",
 			Type:         model.DetectionTypePort,
-			Location:     hostname + ":" + strconv.Itoa(port.PortNumber),
+			Location:     proto + "://" + hostname + ":" + strconv.Itoa(port.PortNumber),
 			Components:   compos,
 			Dependencies: deps,
 			Services:     services,

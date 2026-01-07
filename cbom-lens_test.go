@@ -364,6 +364,10 @@ service:
 		creat(t, t.Name()+".json", stdout.Bytes())
 	}
 
+	if testing.Verbose() {
+		t.Logf("%s", stderr.String())
+	}
+
 	// validate result against JSON schema
 	require.NoError(t, validator.ValidateBytes(stdout.Bytes()))
 
@@ -382,7 +386,7 @@ service:
 			"location": "filesystem:///tmp/TestAllSources3351907987/cert.pem"
 		  },
 		  {
-			"location": "localhost:37257"
+			"location": "https://localhost:37257"
 		  }
 	*/
 	var cert *cdx.Component
@@ -400,9 +404,10 @@ service:
 
 	containerRe := regexp.MustCompile(`^container://.+/cert\.pem$`)
 	filesystemRe := regexp.MustCompile(`^filesystem://.*/cert\.pem$`)
-	portRe := regexp.MustCompile(`^.+:` + regexp.QuoteMeta(mp.Port()) + `$`)
+	portRe := regexp.MustCompile(`^https://.+:` + regexp.QuoteMeta(mp.Port()) + `$`)
 	var cCount, fCount, pCount int
 	for _, occ := range *cert.Evidence.Occurrences {
+		t.Logf("occ.Location=%v", occ.Location)
 		if containerRe.MatchString(occ.Location) {
 			cCount++
 		}

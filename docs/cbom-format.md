@@ -140,7 +140,7 @@ CBOM-Lens attaches **evidence** to components to describe where an asset was obs
 
 - Filesystem paths.
 - Container image layers or paths.
-- Network endpoints (host:port, protocol).
+- Network endpoints (protocol://host:port).
 
 By combining evidence with stable `bom-ref` identifiers, analysis tools can:
 
@@ -149,13 +149,13 @@ By combining evidence with stable `bom-ref` identifiers, analysis tools can:
 
 ### Location format
 
-cbom-lens reports source locations as URIs or endpoints.
+cbom-lens reports source locations as URIs
 
 - Filesystem: `filesystem:///absolute/path`
 - Container: `container://<config-name>/<image-ref>/<absolute-path>`
   - <config-name> comes from your configuration
   - <image-ref> can be a tag (e.g., repo:tag) or a digest (e.g., sha256:...)
-- Network endpoint: `host:port` (not a URI, just an address)
+- Network endpoint: `protocol://host:port`
 
 Example:
 
@@ -166,7 +166,7 @@ Example:
   "occurrences": [
     { "location": "container://docker/image-tag-or-digest:/cert.pem" },
     { "location": "filesystem:///tmp/cert.pem" },
-    { "location": "localhost:37257" }
+    { "location": "https://localhost:37257" }
   ]
 }
 ```
