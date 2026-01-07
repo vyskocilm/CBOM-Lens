@@ -135,7 +135,7 @@ func (c Converter) Nmap(ctx context.Context, nmap model.Nmap) []model.Detection 
 			case "ldap":
 				proto = "ldaps"
 			default:
-				if port.TLSCerts != nil {
+				if len(port.TLSCerts) > 0 {
 					proto = "https"
 				} else {
 					proto += "+ssl"

@@ -35,7 +35,8 @@ Configure filesystem scan. Following modules are used
 - `enabled` (bool, default false) Enable filesystem scanning.
 - `paths` (list of string, optional, default: if unset directory of a configuration file) paths to scan. If path is not accessible Warning is printed to logs.
 
-[!NOTE]: If `filesystem.enabled` is false (or omitted) no filesystem paths are processed.
+> [!NOTE]
+> If `filesystem.enabled` is false (or omitted) no filesystem paths are processed.
 
 ### Path resolution
 

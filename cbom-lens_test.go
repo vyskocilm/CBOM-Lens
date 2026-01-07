@@ -315,7 +315,7 @@ service:
 	t.Logf("port: %s", mp.Port())
 	if keepTestDir {
 		_, err = fmt.Fprintf(t.Output(), "IMAGE %s: -test.keepdir used, so docker image and container won't be deleted\n", image)
-		return
+		require.NoError(t, err)
 	}
 
 	t.Cleanup(func() {
