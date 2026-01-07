@@ -55,7 +55,7 @@ func Images(parentContext context.Context, counter *stats.Stats, configs model.C
 				}
 
 				var ident string
-				if img.Metadata.Tags != nil {
+				if len(img.Metadata.Tags) >= 1 {
 					ident = img.Metadata.Tags[0].String()
 				} else {
 					ident = img.Metadata.ID
