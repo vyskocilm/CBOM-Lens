@@ -44,10 +44,10 @@ func TestScanner_Do(t *testing.T) {
 	isScript := NewMockDetector(t)
 	noMatch := NewMockDetector(t)
 
-	isScript.On("Detect", mock.Anything, []byte("#!/bin/sh"), "fstest::/is-script").
-		Return([]model.Detection{{Location: "fstest::/is-script"}}, nil).
+	isScript.On("Detect", mock.Anything, []byte("#!/bin/sh"), "filesystem:///is-script").
+		Return([]model.Detection{{Location: "filesystem:///is-script"}}, nil).
 		Once()
-	isScript.On("Detect", mock.Anything, []byte("not a script"), "fstest::/dir/not-a-script").
+	isScript.On("Detect", mock.Anything, []byte("not a script"), "filesystem:///dir/not-a-script").
 		Return(nil, model.ErrNoMatch).
 		Once()
 
@@ -59,7 +59,7 @@ func TestScanner_Do(t *testing.T) {
 	counter := stats.New(t.Name())
 	scanner := scan.New(4, counter, detectors)
 	detections := make([]model.Detection, 0, 10)
-	for detection, err := range scanner.Do(t.Context(), walk.FS(t.Context(), counter, root, "fstest::")) {
+	for detection, err := range scanner.Do(t.Context(), walk.FS(t.Context(), counter, root, "/")) {
 		if errors.Is(err, model.ErrNoMatch) {
 			continue
 		}
@@ -68,7 +68,7 @@ func TestScanner_Do(t *testing.T) {
 	}
 
 	require.Len(t, detections, 1)
-	require.Equal(t, "fstest::/is-script", detections[0].Location)
+	require.Equal(t, "filesystem:///is-script", detections[0].Location)
 	istats := scanner.Stats()
 	require.NotNil(t, istats)
 	stats := maps.Collect(counter.Stats())

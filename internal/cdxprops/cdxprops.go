@@ -75,7 +75,6 @@ func (c Converter) CertHit(ctx context.Context, hit model.CertHit) *model.Detect
 	}
 
 	compos, deps, err := c.certHitToComponents(ctx, hit)
-	// TODO: figure out the PQC
 	if err != nil {
 		slog.ErrorContext(ctx, "can't parse certificate", "error", err)
 		return nil
@@ -119,7 +118,7 @@ func (c Converter) Nmap(ctx context.Context, nmap model.Nmap) []model.Detection 
 		detections[i] = model.Detection{
 			Source:       "NMAP",
 			Type:         model.DetectionTypePort,
-			Location:     hostname + ":" + strconv.Itoa(port.PortNumber),
+			Location:     port.Protocol + "://" + hostname + ":" + strconv.Itoa(port.PortNumber),
 			Components:   compos,
 			Dependencies: deps,
 			Services:     services,

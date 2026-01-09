@@ -60,18 +60,13 @@ func (c Converter) parseNmap(ctx context.Context, port model.NmapPort) (compos [
 	switch tunnelOrService {
 	case "ssh":
 		compos = append(compos, c.sshToCompos(ctx, port)...)
-	case "ssl", "http", "https":
+	case "ssl", "http", "https", "https-alt":
 		c := c.tlsToCompos(ctx, port)
 		compos = append(compos, c...)
 	default:
-		serviceName := port.Service.Name
-		if port.Service.Tunnel != "" {
-			serviceName = port.Service.Tunnel + "/" + serviceName
-		}
-		slog.WarnContext(ctx, "can't parse unsupported nmap service: ignoring", "service", serviceName)
+		slog.WarnContext(ctx, "can't parse unsupported nmap service: ignoring", "service_name", port.Service.Name, "tunnel", port.Service.Tunnel)
 	}
 
-	// FIXME: handle cdx services too
 	return
 }
 

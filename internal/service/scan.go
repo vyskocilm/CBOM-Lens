@@ -86,7 +86,7 @@ func (s *Scan) Do(parentCtx context.Context, seq iter.Seq2[model.Entry, error]) 
 }
 
 func (s *Scan) scan(ctx context.Context, entry model.Entry) ([]model.Detection, error) {
-	ctx = log.ContextAttrs(ctx, slog.String("path", entry.Path()))
+	ctx = log.ContextAttrs(ctx, slog.String("location", entry.Location()))
 	slog.DebugContext(ctx, "scanning")
 	if ctx.Err() != nil {
 		return nil, ctx.Err()
@@ -97,7 +97,7 @@ func (s *Scan) scan(ctx context.Context, entry model.Entry) ([]model.Detection, 
 		return nil, fmt.Errorf("scan Stat: %w", err)
 	}
 	if info.Size() > s.skipIfBigger {
-		slog.DebugContext(ctx, "excluded too big", "path", entry.Path(), "size", info.Size())
+		slog.DebugContext(ctx, "excluded too big", "location", entry.Location(), "size", info.Size())
 		s.counter.IncExcludedFiles()
 		return nil, fmt.Errorf("entry too big (%d bytes): %w", info.Size(), model.ErrTooBig)
 	}
@@ -136,7 +136,7 @@ func (s *Scan) scan(ctx context.Context, entry model.Entry) ([]model.Detection, 
 		if ld, ok := detector.(interface{ LogAttrs() []slog.Attr }); ok {
 			detectCtx = log.ContextAttrs(ctx, ld.LogAttrs()...)
 		}
-		d, err := detector.Detect(detectCtx, buf, entry.Path())
+		d, err := detector.Detect(detectCtx, buf, entry.Location())
 
 		switch {
 		case err == nil:

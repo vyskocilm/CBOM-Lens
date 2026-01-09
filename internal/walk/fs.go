@@ -89,9 +89,9 @@ type fsEntry struct {
 	infoErr error
 }
 
-// returns the absolute path to the file
-func (e fsEntry) Path() string {
-	return e.abspath
+// returns the filesystem:///absolute/path/to/the/file
+func (e fsEntry) Location() string {
+	return "filesystem://" + e.abspath
 }
 
 func (e fsEntry) Open() (io.ReadCloser, error) {
