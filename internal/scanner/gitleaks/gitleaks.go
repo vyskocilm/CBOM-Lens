@@ -3,6 +3,7 @@ package gitleaks
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"sync"
 
 	"github.com/CZERTAINLY/CBOM-lens/internal/model"
@@ -64,6 +65,8 @@ func (d *Scanner) Scan(ctx context.Context, b []byte, path string) (model.Leaks,
 			bundle, err := pem.Scanner{}.Scan(ctx, b, path)
 			if err == nil {
 				findings[i].PEMBundle = bundle
+			} else {
+				slog.WarnContext(ctx, "can't parse private-key", "error", err)
 			}
 		}
 	}
