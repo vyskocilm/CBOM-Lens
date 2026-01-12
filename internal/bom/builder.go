@@ -6,8 +6,10 @@ import (
 	"io"
 	"log/slog"
 	"maps"
+	"reflect"
 	"runtime/debug"
 	"slices"
+	"strings"
 	"time"
 
 	"github.com/CZERTAINLY/CBOM-lens/internal/model"
@@ -104,21 +106,19 @@ func (b *Builder) appendDetection(ctx context.Context, detection model.Detection
 
 // BOM returns a cdx.BOM based on a data inside the Builder
 func (b *Builder) BOM() cdx.BOM {
+	safeRefs := b.safeRefs()
+
 	components := make([]cdx.Component, 0, len(b.components))
 	for _, compop := range b.components {
 		if compop == nil {
 			continue
 		}
-		components = append(components, *compop)
+		components = append(components, safeRefs.component(*compop))
 	}
 
 	dependencies := make([]cdx.Dependency, 0, len(b.dependencies))
 	for bomRef, depsp := range b.dependencies {
-		dep := cdx.Dependency{
-			Ref:          bomRef,
-			Dependencies: depsp,
-		}
-		dependencies = append(dependencies, dep)
+		dependencies = append(dependencies, safeRefs.dependency(bomRef, depsp))
 	}
 
 	var statistics []cdx.Property
@@ -215,4 +215,105 @@ func bomStatistics(counter *stats.Stats) []cdx.Property {
 		})
 	}
 	return props
+}
+
+type safeRefs struct {
+	refs map[string]string
+}
+
+func (b Builder) safeRefs() safeRefs {
+	var refs = make(map[string]string, len(b.components))
+	for _, compop := range b.components {
+		if compop == nil {
+			continue
+		}
+		refs[compop.BOMRef] = safeRef(compop.BOMRef)
+	}
+	return safeRefs{refs: refs}
+}
+
+func (s safeRefs) component(compo cdx.Component) cdx.Component {
+	safe := s.refs[compo.BOMRef]
+	compo.BOMRef = safe
+
+	replaceBOMReferences(s.refs, reflect.ValueOf(&compo))
+
+	return compo
+}
+
+func (s safeRefs) dependency(bomRef string, depsp *[]string) cdx.Dependency {
+
+	safe := s.refs[bomRef]
+	if depsp != nil {
+		deps := make([]string, len(*depsp))
+		for idx, dep := range *depsp {
+			deps[idx] = s.refs[dep]
+		}
+		depsp = &deps
+	}
+
+	return cdx.Dependency{
+		Ref:          safe,
+		Dependencies: depsp,
+	}
+}
+
+func safeRef(bomRef string) string {
+	uid := uuid.New()
+	before, _, ok := strings.Cut(bomRef, "@")
+	if !ok {
+		return uid.String()
+	}
+	return before + "@" + uid.String()
+}
+
+func replaceBOMReferences(refs map[string]string, v reflect.Value) {
+	if !v.IsValid() {
+		return
+	}
+
+	switch v.Kind() {
+	case reflect.Ptr:
+		if v.IsNil() {
+			return
+		}
+		replaceBOMReferences(refs, v.Elem())
+
+	case reflect.Interface:
+		if v.IsNil() {
+			return
+		}
+		replaceBOMReferences(refs, v.Elem())
+
+	case reflect.Struct:
+		for i := 0; i < v.NumField(); i++ {
+			field := v.Field(i)
+			if !field.CanSet() {
+				continue
+			}
+
+			// Check if this field is a BOMReference
+			if field.Type() == reflect.TypeOf(cdx.BOMReference("")) {
+				oldRef := field.Interface().(cdx.BOMReference)
+				if oldRef != "" {
+					if safeRef, ok := refs[string(oldRef)]; ok {
+						field.SetString(safeRef)
+					}
+				}
+			} else {
+				replaceBOMReferences(refs, field)
+			}
+		}
+
+	case reflect.Slice, reflect.Array:
+		for i := 0; i < v.Len(); i++ {
+			replaceBOMReferences(refs, v.Index(i))
+		}
+
+	case reflect.Map:
+		iter := v.MapRange()
+		for iter.Next() {
+			replaceBOMReferences(refs, iter.Value())
+		}
+	}
 }
