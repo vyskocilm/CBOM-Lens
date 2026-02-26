@@ -35,7 +35,7 @@ func (d DiscoveryRow) String() string {
 	if d.Success != nil {
 		fmt.Fprintf(&sb, ", success: %t", *d.Success)
 	} else {
-		fmt.Fprintf(&sb, ", success: nil")
+		fmt.Fprint(&sb, ", success: nil")
 	}
 	if d.UploadKey != nil {
 		fmt.Fprintf(&sb, ", upload_key: %q", *d.UploadKey)
