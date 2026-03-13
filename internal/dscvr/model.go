@@ -1,13 +1,9 @@
 package dscvr
 
 import (
-	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"fmt"
-
-	"github.com/CZERTAINLY/CBOM-lens/internal/model"
-
-	"go.yaml.in/yaml/v4"
 )
 
 type checkHealthResponse struct {
@@ -195,45 +191,71 @@ func (a attrCodeblock) MarshalJSON() ([]byte, error) {
 	return json.Marshal(aux)
 }
 
-func validateAttr(attrs []attrCodeblock) error {
-	for _, cpy := range attrs {
-		switch cpy.UUID {
-		case lensConfigurationAttrUUID:
-			if cpy.ContentType == nil {
-				return fmt.Errorf("attribute uuid: %q, name: %q does not have 'ContentType' property defined", cpy.UUID, cpy.Name)
+func validateAttr(attrs []RequestAttributeDto) error {
+	if len(attrs) == 0 {
+		return errors.New("attributes array cannot be empty")
+	}
+
+	for _, attr := range attrs {
+		if attr.UUID == "" {
+			return errors.New("attribute UUID cannot be empty")
+		}
+		if attr.Name == "" {
+			return errors.New("attribute name cannot be empty")
+		}
+		if attr.ContentType == "" {
+			return errors.New("attribute contentType cannot be empty")
+		}
+		if len(attr.Content) == 0 {
+			return errors.New("attribute content cannot be empty")
+		}
+		// Validate contentType is one of the allowed values
+		validContentTypes := []AttributeContentType{
+			AttributeContentTypeString, AttributeContentTypeText, AttributeContentTypeInteger,
+			AttributeContentTypeBoolean, AttributeContentTypeFloat, AttributeContentTypeDate,
+			AttributeContentTypeTime, AttributeContentTypeDatetime, AttributeContentTypeSecret,
+			AttributeContentTypeFile, AttributeContentTypeCredential, AttributeContentTypeCodeblock,
+			AttributeContentTypeObject,
+		}
+		valid := false
+		for _, vct := range validContentTypes {
+			if attr.ContentType == vct {
+				valid = true
+				break
 			}
-			if *cpy.ContentType != lensConfigurationAttrContentType {
-				return fmt.Errorf("attribute uuid: %q, name: %q does not have expected 'ContentType' property defined, expected: %q, actual, %q",
-					cpy.UUID, cpy.Name, lensConfigurationAttrContentType, *cpy.ContentType)
-			}
-			if len(cpy.Content) != 1 {
-				return fmt.Errorf("attribute uuid: %q, name: %q has unexpected number of items in `Content` array, expected: 1, actual: %d",
-					cpy.UUID, cpy.Name, len(cpy.Content))
-			}
-			data, ok := cpy.Content[0].Data.(attrCodeblockContentData)
-			if !ok {
-				return fmt.Errorf("attribute uuid: %q, name: %q wrong type of `Content[0].Data` array, expected: attrCodeblockContent, actual: %T",
-					cpy.UUID, cpy.Name, cpy.Content[0].Data)
-			}
-			if data.Language != "yaml" {
-				return fmt.Errorf("attribute uuid: %q, name: %q defines unexpected language, expected: 'yaml', actual: %q", cpy.UUID, cpy.Name, data.Language)
-			}
-			dd, err := base64.StdEncoding.DecodeString(data.Code)
-			if err != nil {
-				return fmt.Errorf("attribute uuid: %q, name: %q contains an unexpected base64 encoded value: %q: %s", cpy.UUID, cpy.Name, data.Code, err)
-			}
-			var m model.Scan
-			err = yaml.Unmarshal(dd, &m)
-			if err != nil {
-				return fmt.Errorf("attribute uuid: %q, name: %q is not a valid yaml cbom-lens scan configuration: %s", cpy.UUID, cpy.Name, err)
-			}
-		case lensConfigurationInfoAttrUUID:
-			return nil
-		default:
-			return fmt.Errorf("unknown attribute uuid: %q name: %q", cpy.UUID, cpy.Name)
+		}
+		if !valid {
+			return fmt.Errorf("invalid contentType: %s", attr.ContentType)
 		}
 	}
+
 	return nil
+}
+
+type AttributeContentType string
+
+const (
+	AttributeContentTypeString     AttributeContentType = "string"
+	AttributeContentTypeText       AttributeContentType = "text"
+	AttributeContentTypeInteger    AttributeContentType = "integer"
+	AttributeContentTypeBoolean    AttributeContentType = "boolean"
+	AttributeContentTypeFloat      AttributeContentType = "float"
+	AttributeContentTypeDate       AttributeContentType = "date"
+	AttributeContentTypeTime       AttributeContentType = "time"
+	AttributeContentTypeDatetime   AttributeContentType = "datetime"
+	AttributeContentTypeSecret     AttributeContentType = "secret"
+	AttributeContentTypeFile       AttributeContentType = "file"
+	AttributeContentTypeCredential AttributeContentType = "credential"
+	AttributeContentTypeCodeblock  AttributeContentType = "codeblock"
+	AttributeContentTypeObject     AttributeContentType = "object"
+)
+
+type RequestAttributeDto struct {
+	UUID        string                 `json:"uuid"`
+	Name        string                 `json:"name"`
+	ContentType AttributeContentType   `json:"contentType"`
+	Content     []attrCodeblockContent `json:"content"`
+	Version     string                 `json:"version,omitempty"`
 }
 
 func ptrString(v string) *string {
