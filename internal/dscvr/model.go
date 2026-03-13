@@ -1,9 +1,14 @@
 package dscvr
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
+
+	"github.com/CZERTAINLY/CBOM-lens/internal/model"
+
+	"go.yaml.in/yaml/v4"
 )
 
 type checkHealthResponse struct {
@@ -197,36 +202,44 @@ func validateAttr(attrs []RequestAttributeDto) error {
 	}
 
 	for _, attr := range attrs {
-		if attr.UUID == "" {
-			return errors.New("attribute UUID cannot be empty")
-		}
-		if attr.Name == "" {
-			return errors.New("attribute name cannot be empty")
-		}
-		if attr.ContentType == "" {
-			return errors.New("attribute contentType cannot be empty")
-		}
-		if len(attr.Content) == 0 {
-			return errors.New("attribute content cannot be empty")
-		}
-		// Validate contentType is one of the allowed values
-		switch attr.ContentType {
-		case AttributeContentTypeString,
-			AttributeContentTypeText,
-			AttributeContentTypeInteger,
-			AttributeContentTypeBoolean,
-			AttributeContentTypeFloat,
-			AttributeContentTypeDate,
-			AttributeContentTypeTime,
-			AttributeContentTypeDatetime,
-			AttributeContentTypeSecret,
-			AttributeContentTypeFile,
-			AttributeContentTypeCredential,
-			AttributeContentTypeCodeblock,
-			AttributeContentTypeObject:
-			// valid content type
+		switch attr.UUID {
+		case lensConfigurationAttrUUID:
+			if attr.Name == "" {
+				return errors.New("attribute name cannot be empty")
+			}
+			if attr.ContentType == "" {
+				return errors.New("attribute contentType cannot be empty")
+			}
+			if attr.ContentType != lensConfigurationAttrContentType {
+				return fmt.Errorf("attribute uuid: %q, name: %q does not have expected 'ContentType' property defined, expected: %q, actual, %q",
+					attr.UUID, attr.Name, lensConfigurationAttrContentType, attr.ContentType)
+			}
+			if len(attr.Content) != 1 {
+				return fmt.Errorf("attribute uuid: %q, name: %q has unexpected number of items in `Content` array, expected: 1, actual: %d",
+					attr.UUID, attr.Name, len(attr.Content))
+			}
+			data, ok := attr.Content[0].Data.(attrCodeblockContentData)
+			if !ok {
+				return fmt.Errorf("attribute uuid: %q, name: %q wrong type of `Content[0].Data` array, expected: attrCodeblockContent, actual: %T",
+					attr.UUID, attr.Name, attr.Content[0].Data)
+			}
+			if data.Language != "yaml" {
+				return fmt.Errorf("attribute uuid: %q, name: %q defines unexpected language, expected: 'yaml', actual: %q", attr.UUID, attr.Name, data.Language)
+			}
+
+			dd, err := base64.StdEncoding.DecodeString(data.Code)
+			if err != nil {
+				return fmt.Errorf("attribute uuid: %q, name: %q contains an unexpected base64 encoded value: %q: %s", attr.UUID, attr.Name, data.Code, err)
+			}
+			var m model.Scan
+			err = yaml.Unmarshal(dd, &m)
+			if err != nil {
+				return fmt.Errorf("attribute uuid: %q, name: %q is not a valid yaml cbom-lens scan configuration: %s", attr.UUID, attr.Name, err)
+			}
+		case lensConfigurationInfoAttrUUID:
+			return nil
 		default:
-			return fmt.Errorf("invalid contentType: %s", attr.ContentType)
+			return fmt.Errorf("unknown attribute uuid: %q name: %q", attr.UUID, attr.Name)
 		}
 	}
 
