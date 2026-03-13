@@ -210,21 +210,22 @@ func validateAttr(attrs []RequestAttributeDto) error {
 			return errors.New("attribute content cannot be empty")
 		}
 		// Validate contentType is one of the allowed values
-		validContentTypes := []AttributeContentType{
-			AttributeContentTypeString, AttributeContentTypeText, AttributeContentTypeInteger,
-			AttributeContentTypeBoolean, AttributeContentTypeFloat, AttributeContentTypeDate,
-			AttributeContentTypeTime, AttributeContentTypeDatetime, AttributeContentTypeSecret,
-			AttributeContentTypeFile, AttributeContentTypeCredential, AttributeContentTypeCodeblock,
-			AttributeContentTypeObject,
-		}
-		valid := false
-		for _, vct := range validContentTypes {
-			if attr.ContentType == vct {
-				valid = true
-				break
-			}
-		}
-		if !valid {
+		switch attr.ContentType {
+		case AttributeContentTypeString,
+			AttributeContentTypeText,
+			AttributeContentTypeInteger,
+			AttributeContentTypeBoolean,
+			AttributeContentTypeFloat,
+			AttributeContentTypeDate,
+			AttributeContentTypeTime,
+			AttributeContentTypeDatetime,
+			AttributeContentTypeSecret,
+			AttributeContentTypeFile,
+			AttributeContentTypeCredential,
+			AttributeContentTypeCodeblock,
+			AttributeContentTypeObject:
+			// valid content type
+		default:
 			return fmt.Errorf("invalid contentType: %s", attr.ContentType)
 		}
 	}
