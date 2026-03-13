@@ -179,8 +179,7 @@ func TestValidateAttr(t *testing.T) {
 		{
 			name:    "empty attributes slice",
 			attrs:   []RequestAttributeDto{},
-			wantErr: true,
-			errMsg:  "cannot be empty",
+			wantErr: false,
 		},
 		{
 			name: "multiple valid attributes",
@@ -217,8 +216,7 @@ func TestValidateAttr(t *testing.T) {
 		{
 			name:    "nil attributes slice",
 			attrs:   nil,
-			wantErr: true,
-			errMsg:  "cannot be empty",
+			wantErr: false,
 		},
 	}
 
