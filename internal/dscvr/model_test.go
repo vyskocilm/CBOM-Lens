@@ -275,7 +275,7 @@ func TestValidateAttr(t *testing.T) {
 	}
 }
 
-func TestUnmarshal(t *testing.T) {
+func TestAttrCodeblock_UnmarshalJSON(t *testing.T) {
 	const input = `
 {
   "uuid":"eb87e85b-297c-44f9-8f69-eebc86bf7c65",
