@@ -2,12 +2,27 @@ package dscvr
 
 import (
 	"encoding/base64"
+	"encoding/json"
 	"testing"
 
 	"github.com/CZERTAINLY/CBOM-lens/internal/model"
+
 	"github.com/stretchr/testify/require"
 	"go.yaml.in/yaml/v4"
 )
+
+const testCase = `
+{
+  "uuid":"eb87e85b-297c-44f9-8f69-eebc86bf7c65",
+  "name":"cbom_lens_scan_configuration",
+  "contentType":"codeblock",
+  "content":[{
+    "reference":null,
+    "data":{"code":"dGVzdC55YW1s","language":"yaml"}}
+  ],
+  "version":"v2"
+ }
+`
 
 func TestValidateAttr(t *testing.T) {
 	// Helper function to create valid scan config
@@ -270,6 +285,282 @@ func TestValidateAttr(t *testing.T) {
 			} else {
 				require.NoError(t, err)
 			}
+		})
+	}
+}
+
+func TestAttrCodeblock_MarshalJSON(t *testing.T) {
+	tests := []struct {
+		name     string
+		input    attrCodeblock
+		expected string
+	}{
+		{
+			name: "minimal fields, unset version omitted",
+			input: attrCodeblock{
+				UUID: "test-uuid",
+				Name: "test-name",
+				Content: []attrCodeblockContent{
+					{Data: attrCodeblockContentData{Code: "abc", Language: "yaml"}},
+				},
+			},
+			expected: `{
+				"uuid": "test-uuid",
+				"name": "test-name",
+				"content": [{"data": {"code": "abc", "language": "yaml"}}]
+			}`,
+		},
+		{
+			name: "null version is included",
+			input: attrCodeblock{
+				UUID:    "test-uuid",
+				Name:    "test-name",
+				Version: NullValue(),
+				Content: []attrCodeblockContent{},
+			},
+			expected: `{
+				"uuid": "test-uuid",
+				"name": "test-name",
+				"version": null,
+				"content": []
+			}`,
+		},
+		{
+			name: "integer version",
+			input: attrCodeblock{
+				UUID:    "test-uuid",
+				Name:    "test-name",
+				Version: IntValue(3),
+				Content: []attrCodeblockContent{},
+			},
+			expected: `{
+				"uuid": "test-uuid",
+				"name": "test-name",
+				"version": 3,
+				"content": []
+			}`,
+		},
+		{
+			name: "string version",
+			input: attrCodeblock{
+				UUID:    "test-uuid",
+				Name:    "test-name",
+				Version: StringValue("v1.0"),
+				Content: []attrCodeblockContent{},
+			},
+			expected: `{
+				"uuid": "test-uuid",
+				"name": "test-name",
+				"version": "v1.0",
+				"content": []
+			}`,
+		},
+		{
+			name: "all optional fields set",
+			input: attrCodeblock{
+				UUID:        "test-uuid",
+				Name:        "test-name",
+				Version:     IntValue(1),
+				Description: ptrString("a description"),
+				Type:        ptrString("data"),
+				ContentType: ptrString("application/json"),
+				Content:     []attrCodeblockContent{},
+				Properties:  &attrProperties{Label: "my-label", Visible: true},
+			},
+			expected: `{
+				"uuid": "test-uuid",
+				"name": "test-name",
+				"version": 1,
+				"description": "a description",
+				"type": "data",
+				"contentType": "application/json",
+				"content": [],
+				"properties": {"label": "my-label", "visible": true}
+			}`,
+		},
+		{
+			name: "multiple content items",
+			input: attrCodeblock{
+				UUID: "test-uuid",
+				Name: "test-name",
+				Content: []attrCodeblockContent{
+					{Data: attrCodeblockContentData{Code: "code1", Language: "yaml"}},
+					{Data: attrCodeblockContentData{Code: "code2", Language: "json"}},
+				},
+			},
+			expected: `{
+				"uuid": "test-uuid",
+				"name": "test-name",
+				"content": [
+					{"data": {"code": "code1", "language": "yaml"}},
+					{"data": {"code": "code2", "language": "json"}}
+				]
+			}`,
+		},
+		{
+			name: "content with reference",
+			input: attrCodeblock{
+				UUID: "test-uuid",
+				Name: "test-name",
+				Content: []attrCodeblockContent{
+					{Reference: ptrString("ref-1"), Data: attrCodeblockContentData{Code: "abc", Language: "yaml"}},
+				},
+			},
+			expected: `{
+				"uuid": "test-uuid",
+				"name": "test-name",
+				"content": [{"reference": "ref-1", "data": {"code": "abc", "language": "yaml"}}]
+			}`,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			data, err := json.Marshal(tt.input)
+			require.NoError(t, err)
+			require.JSONEq(t, tt.expected, string(data))
+		})
+	}
+}
+
+func TestAttrCodeblock_UnmarshalJSON(t *testing.T) {
+	tests := []struct {
+		name        string
+		input       string
+		expected    attrCodeblock
+		expectedErr bool
+	}{
+		{
+			name: "minimal fields with data type",
+			input: `{
+				"uuid": "test-uuid",
+				"name": "test-name",
+				"type": "data",
+				"content": [{"data": {"code": "abc", "language": "yaml"}}]
+			}`,
+			expected: attrCodeblock{
+				UUID: "test-uuid",
+				Name: "test-name",
+				Type: ptrString("data"),
+				Content: []attrCodeblockContent{
+					{Data: attrCodeblockContentData{Code: "abc", Language: "yaml"}},
+				},
+			},
+		},
+		{
+			name: "info type content unmarshals as string",
+			input: `{
+				"uuid": "test-uuid",
+				"name": "test-name",
+				"type": "info",
+				"content": [{"data": "some info text"}]
+			}`,
+			expected: attrCodeblock{
+				UUID: "test-uuid",
+				Name: "test-name",
+				Type: ptrString("info"),
+				Content: []attrCodeblockContent{
+					{Data: "some info text"},
+				},
+			},
+		},
+		{
+			name: "missing type defaults to data",
+			input: `{
+				"uuid": "test-uuid",
+				"name": "test-name",
+				"content": [{"data": {"code": "abc", "language": "yaml"}}]
+			}`,
+			expected: attrCodeblock{
+				UUID: "test-uuid",
+				Name: "test-name",
+				Content: []attrCodeblockContent{
+					{Data: attrCodeblockContentData{Code: "abc", Language: "yaml"}},
+				},
+			},
+		},
+		{
+			name: "integer version",
+			input: `{
+				"uuid": "test-uuid",
+				"name": "test-name",
+				"version": 3,
+				"content": []
+			}`,
+			expected: attrCodeblock{
+				UUID:    "test-uuid",
+				Name:    "test-name",
+				Version: IntValue(3),
+				Content: []attrCodeblockContent{},
+			},
+		},
+		{
+			name: "string version",
+			input: `{
+				"uuid": "test-uuid",
+				"name": "test-name",
+				"version": "v1.0",
+				"content": []
+			}`,
+			expected: attrCodeblock{
+				UUID:    "test-uuid",
+				Name:    "test-name",
+				Version: StringValue("v1.0"),
+				Content: []attrCodeblockContent{},
+			},
+		},
+		{
+			name: "null version",
+			input: `{
+				"uuid": "test-uuid",
+				"name": "test-name",
+				"version": null,
+				"content": []
+			}`,
+			expected: attrCodeblock{
+				UUID:    "test-uuid",
+				Name:    "test-name",
+				Version: NullValue(),
+				Content: []attrCodeblockContent{},
+			},
+		},
+		{
+			name:        "unsupported type returns error",
+			input:       `{"uuid": "u", "name": "n", "type": "unknown", "content": []}`,
+			expectedErr: true,
+		},
+		{
+			name:        "test case",
+			input:       testCase,
+			expectedErr: false,
+			expected: attrCodeblock{
+				UUID:        "eb87e85b-297c-44f9-8f69-eebc86bf7c65",
+				Name:        "cbom_lens_scan_configuration",
+				ContentType: ptrString("codeblock"),
+				Version:     StringValue("v2"),
+				Content: []attrCodeblockContent{
+					{
+						Data: attrCodeblockContentData{Code: "dGVzdC55YW1s", Language: "yaml"},
+					},
+				},
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var result attrCodeblock
+			err := json.Unmarshal([]byte(tt.input), &result)
+			if tt.expectedErr {
+				require.Error(t, err)
+				return
+			}
+			require.NoError(t, err)
+			for i := range result.Content {
+				require.NotEmpty(t, result.Content[i].RawData)
+				result.Content[i].RawData = nil
+			}
+			require.Equal(t, tt.expected, result)
 		})
 	}
 }

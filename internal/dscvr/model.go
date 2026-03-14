@@ -106,7 +106,7 @@ type supportedFunctionEndpoint struct {
 }
 
 type attrCodeblock struct {
-	Version     *int                   `json:"version,omitempty"`
+	Version     NullableIntOrString    `json:"version,omitempty"`
 	UUID        string                 `json:"uuid"`
 	Name        string                 `json:"name"`
 	Description *string                `json:"description,omitempty"`
@@ -182,17 +182,43 @@ func (a *attrCodeblock) UnmarshalJSON(b []byte) error {
 }
 
 func (a attrCodeblock) MarshalJSON() ([]byte, error) {
-	type auxBlock attrCodeblock
-	var aux = auxBlock(a)
-
+	contents := make([]attrCodeblockContent, len(a.Content))
 	for i, content := range a.Content {
 		raw, err := json.Marshal(content.Data)
 		if err != nil {
 			return nil, err
 		}
-		aux.Content[i].RawData = raw
+		contents[i] = content
+		contents[i].RawData = raw
 	}
-	return json.Marshal(aux)
+
+	m := map[string]any{
+		"uuid":    a.UUID,
+		"name":    a.Name,
+		"content": contents,
+	}
+
+	if a.Version.isSet {
+		versionBytes, err := json.Marshal(a.Version)
+		if err != nil {
+			return nil, err
+		}
+		m["version"] = json.RawMessage(versionBytes)
+	}
+	if a.Description != nil {
+		m["description"] = a.Description
+	}
+	if a.Type != nil {
+		m["type"] = a.Type
+	}
+	if a.ContentType != nil {
+		m["contentType"] = a.ContentType
+	}
+	if a.Properties != nil {
+		m["properties"] = a.Properties
+	}
+
+	return json.Marshal(m)
 }
 
 func validateAttr(attrs []attrCodeblock) error {
