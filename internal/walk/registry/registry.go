@@ -115,14 +115,24 @@ func Walk(ctx context.Context, counter *stats.Stats, cfg model.Registry) iter.Se
 				if ctx.Err() != nil {
 					return
 				}
+				counter.IncSources()
 				k, err := registry.OpenKey(hive, p.Key, view.access)
 				if err != nil {
+					counter.IncErrSources()
 					if !yield(nil, fmt.Errorf("registry: open %s\\%s: %w", p.Hive, p.Key, err)) {
 						return
 					}
 					continue
 				}
-				cont := walkKey(ctx, windowsKey{k: k, access: view.access}, p.Key, p.Hive, view.label, 0, cfg, c, yield)
+				countingYield := func(entry model.Entry, err error) bool {
+					if err != nil {
+						counter.IncErrFiles()
+					} else {
+						counter.IncFiles()
+					}
+					return yield(entry, err)
+				}
+				cont := walkKey(ctx, windowsKey{k: k, access: view.access}, p.Key, p.Hive, view.label, 0, cfg, c, countingYield)
 				k.Close()
 				if !cont {
 					return

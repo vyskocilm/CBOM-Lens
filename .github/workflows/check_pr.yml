@@ -134,7 +134,7 @@ jobs:
             enabled: true
             paths:
               - hive: HKCU
-                key: "Software\CBOMLensTest"
+                key: 'Software\CBOMLensTest'
           "@
           $config | Out-File -FilePath cbom-lens-test.yaml -Encoding utf8
           .\cbom-lens-ci.exe run --config cbom-lens-test.yaml | Out-File -FilePath output.json

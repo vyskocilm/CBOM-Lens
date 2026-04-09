@@ -128,7 +128,9 @@ func walkKey(
 	// Process values at this key
 	names, err := key.ReadValueNames()
 	if err != nil {
-		return yield(nil, fmt.Errorf("registry: ReadValueNames %s: %w", normPath, err))
+		if !yield(nil, fmt.Errorf("registry: ReadValueNames %s: %w", normPath, err)) {
+			return false
+		}
 	}
 	for _, name := range names {
 		if ctx.Err() != nil {
@@ -150,7 +152,11 @@ func walkKey(
 		if cfg.MaxValueSize > 0 && len(data) > cfg.MaxValueSize {
 			continue
 		}
-		location := fmt.Sprintf("registry://%s:%s/%s/%s", hive, view, normPath, name)
+		locationName := name
+		if locationName == "" {
+			locationName = "(Default)"
+		}
+		location := fmt.Sprintf("registry://%s:%s/%s/%s", hive, view, normPath, locationName)
 		entry := registryEntry{location: location, data: data}
 		if !yield(entry, nil) {
 			return false
@@ -169,7 +175,10 @@ func walkKey(
 		if ctx.Err() != nil {
 			return false
 		}
-		subPath := keyPath + `\` + sub
+		subPath := sub
+		if keyPath != "" {
+			subPath = keyPath + `\` + sub
+		}
 		normSubPath := normaliseKey(subPath)
 		// Pre-check exclude on the subkey path before opening it
 		if len(c.excludeKeys) > 0 && matchesAny(normSubPath, c.excludeKeys) {
@@ -183,7 +192,7 @@ func walkKey(
 			continue
 		}
 		cont := walkKey(ctx, subKey, subPath, hive, view, depth+1, cfg, c, yield)
-		subKey.Close()
+		_ = subKey.Close()
 		if !cont {
 			return false
 		}

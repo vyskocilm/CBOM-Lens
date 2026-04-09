@@ -259,6 +259,74 @@ func TestCompile_InvalidPattern_returnsError(t *testing.T) {
 	require.Error(t, err)
 }
 
+func TestWalkKey_ReadValueNamesError_continuesSubkeys(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	root := mock.NewMockRegistryKey(ctrl)
+	child := mock.NewMockRegistryKey(ctrl)
+
+	// ReadValueNames fails on root — error is yielded but walk continues into subkeys.
+	root.EXPECT().ReadValueNames().Return(nil, errors.New("access denied"))
+	root.EXPECT().ReadSubKeyNames().Return([]string{"Child"}, nil)
+	root.EXPECT().OpenSubKey("Child").Return(child, nil)
+
+	child.EXPECT().ReadValueNames().Return([]string{"val"}, nil)
+	child.EXPECT().ReadValueType("val").Return(uint32(3), nil)
+	child.EXPECT().ReadBinaryValue("val").Return([]byte{0x01}, nil)
+	child.EXPECT().ReadSubKeyNames().Return([]string{}, nil)
+	child.EXPECT().Close().Return(nil)
+
+	cfg := model.Registry{MaxValueSize: 0}
+	c, _ := registry.Compile(cfg)
+	entries, errs := collectWalk(context.Background(), root, `ROOT`, "HKLM", "64", 0, cfg, c)
+	require.Len(t, entries, 1, "subkey value still yielded despite ReadValueNames failure on parent")
+	require.Len(t, errs, 1, "ReadValueNames error propagated")
+}
+
+func TestWalkKey_EmptyKeyPath_noLeadingBackslash(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	root := mock.NewMockRegistryKey(ctrl)
+	child := mock.NewMockRegistryKey(ctrl)
+
+	root.EXPECT().ReadValueNames().Return([]string{}, nil)
+	root.EXPECT().ReadSubKeyNames().Return([]string{"Software"}, nil)
+	root.EXPECT().OpenSubKey("Software").Return(child, nil)
+
+	child.EXPECT().ReadValueNames().Return([]string{"val"}, nil)
+	child.EXPECT().ReadValueType("val").Return(uint32(3), nil)
+	child.EXPECT().ReadBinaryValue("val").Return([]byte{0x01}, nil)
+	child.EXPECT().ReadSubKeyNames().Return([]string{}, nil)
+	child.EXPECT().Close().Return(nil)
+
+	cfg := model.Registry{MaxValueSize: 0}
+	c, _ := registry.Compile(cfg)
+	// Empty keyPath simulates scanning directly from a hive root.
+	entries, errs := collectWalk(context.Background(), root, "", "HKCU", "64", 0, cfg, c)
+	require.Empty(t, errs)
+	require.Len(t, entries, 1)
+	assert.Equal(t, "registry://HKCU:64/Software/val", entries[0].Location())
+}
+
+func TestWalkKey_DefaultValue_locationName(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	key := mock.NewMockRegistryKey(ctrl)
+	// Empty string is the Windows "default value" name.
+	key.EXPECT().ReadValueNames().Return([]string{""}, nil)
+	key.EXPECT().ReadValueType("").Return(uint32(1), nil) // REG_SZ
+	key.EXPECT().ReadStringValue("").Return("default-data", nil)
+	key.EXPECT().ReadSubKeyNames().Return([]string{}, nil)
+
+	cfg := model.Registry{MaxValueSize: 0}
+	c, _ := registry.Compile(cfg)
+	entries, errs := collectWalk(context.Background(), key, `SOFTWARE\App`, "HKLM", "64", 0, cfg, c)
+	require.Empty(t, errs)
+	require.Len(t, entries, 1)
+	assert.Equal(t, "registry://HKLM:64/SOFTWARE/App/(Default)", entries[0].Location())
+
+	info, err := entries[0].Stat()
+	require.NoError(t, err)
+	assert.Equal(t, "(Default)", info.Name())
+}
+
 func TestLocationFormat_backslashNormalised(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	key := mock.NewMockRegistryKey(ctrl)
