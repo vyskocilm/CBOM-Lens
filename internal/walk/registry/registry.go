@@ -94,13 +94,13 @@ func Walk(ctx context.Context, counter *stats.Stats, cfg model.Registry) iter.Se
 			access uint32
 			label  string
 		}{
-			{registry.READ | registry.KEY_WOW64_64KEY, "64"},
+			{registry.READ | registry.WOW64_64KEY, "64"},
 		}
 		if cfg.WOW64 {
 			views = append(views, struct {
 				access uint32
 				label  string
-			}{registry.READ | registry.KEY_WOW64_32KEY, "32"})
+			}{registry.READ | registry.WOW64_32KEY, "32"})
 		}
 
 		for _, p := range cfg.Paths {
