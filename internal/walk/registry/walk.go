@@ -141,7 +141,7 @@ func walkKey(
 		}
 		data, ok, err := convertValue(key, name)
 		if err != nil {
-			if !yield(nil, err) {
+			if !yield(nil, fmt.Errorf("%s:%s/%s: %w", hive, view, normPath, err)) {
 				return false
 			}
 			continue

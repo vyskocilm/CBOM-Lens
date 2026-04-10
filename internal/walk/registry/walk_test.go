@@ -236,7 +236,8 @@ func TestWalkKey_ErrorOnOneValue_continues(t *testing.T) {
 	c, _ := registry.Compile(cfg)
 	entries, errs := collectWalk(context.Background(), key, `KEY`, "HKLM", "64", 0, cfg, c)
 	assert.Len(t, entries, 1) // "good" still yielded despite "bad" failing
-	assert.Len(t, errs, 1)    // read error from "bad" propagated via yield
+	require.Len(t, errs, 1)   // read error from "bad" propagated via yield
+	assert.Contains(t, errs[0].Error(), "HKLM:64/KEY")
 }
 
 func TestWalkKey_ContextCancelled_stops(t *testing.T) {
