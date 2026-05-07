@@ -3,7 +3,7 @@ module github.com/CZERTAINLY/CBOM-lens
 go 1.26
 
 require (
-	cuelang.org/go v0.16.0
+	cuelang.org/go v0.16.1
 	github.com/CycloneDX/cyclonedx-go v0.10.0
 	github.com/Ullaakut/nmap/v3 v3.1.0
 	github.com/Ullaakut/nmap/v4 v4.0.0
@@ -12,7 +12,7 @@ require (
 	github.com/docker/docker v28.5.2+incompatible
 	github.com/docker/go-connections v0.6.0
 	github.com/gliderlabs/ssh v0.3.8
-	github.com/go-co-op/gocron/v2 v2.19.1
+	github.com/go-co-op/gocron/v2 v2.21.0
 	github.com/google/uuid v1.6.0
 	github.com/gorilla/mux v1.8.1
 	github.com/kaptinlin/jsonschema v0.7.5
@@ -30,7 +30,7 @@ require (
 	golang.org/x/crypto v0.49.0
 	golang.org/x/sync v0.20.0
 	gopkg.in/yaml.v3 v3.0.1
-	modernc.org/sqlite v1.48.1
+	modernc.org/sqlite v1.49.1
 	software.sslmate.com/src/go-pkcs12 v0.7.0
 )
 
@@ -204,7 +204,7 @@ require (
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20260311181403-84a4fc48630c // indirect
 	google.golang.org/grpc v1.79.3 // indirect
 	google.golang.org/protobuf v1.36.11 // indirect
-	modernc.org/libc v1.70.0 // indirect
+	modernc.org/libc v1.72.0 // indirect
 	modernc.org/mathutil v1.7.1 // indirect
 	modernc.org/memory v1.11.0 // indirect
 )
